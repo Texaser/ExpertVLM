@@ -1,0 +1,14 @@
+[
+  {
+    "id": "guitar_technique_1",
+    "videoUrl": "videos/converted/gp01_153_157_converted.mp4",
+    "groundTruth": "The participant should consider moving their leg over and sitting a bit taller to navigate the fingerboard and play the guitar more efficiently.",
+    "options": [
+      "The participant should consider moving their leg over and sitting a bit taller to navigate the fingerboard and play the guitar more efficiently.",
+      "The participant should lower their leg more to increase stability and lean further forward to access the lower frets more easily, as demonstrated in other sections where this posture enhanced comfort.",
+      "The participant should maintain a slouched posture to bring the guitar closer, as this will improve precision and help in accessing the higher frets more effectively, similar to techniques used in previous performances.",
+      "The participant should sit lower and extend their neck towards the fingerboard. This will automatically improve their finger dexterity and ensure smoother transitions, reflecting this highly effective technique used in complex passages.",
+      "The participant should keep their current seating posture but reposition their hands higher on the neck. This will address efficiency issues and create a smoother playstyle, capturing the fluidity seen in earlier sections where hand positioning was a key focus."
+    ]
+  }
+] 
