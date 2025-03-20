@@ -241,44 +241,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Function to submit to FormSpree (or similar service)
     function submitToFormSpree(data) {
         // Replace with your actual FormSpree endpoint or other service
-        const formSpreeEndpoint = 'https://formspree.io/f/yourformid';
+        const formSpreeEndpoint = 'https://formspree.io/f/xdkeaypg'; // 替换为您的FormSpree表单ID
         
         // Show loading state
         document.getElementById('submit-all-btn').disabled = true;
         document.getElementById('submit-all-btn').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
         
-        // For demonstration, we'll just simulate a successful submission
-        setTimeout(() => {
-            // Show success message
-            document.getElementById('submission-form').style.display = 'none';
-            document.getElementById('submission-success').style.display = 'block';
-            
-            // In a real implementation, you would send data to FormSpree like this:
-            /*
-            fetch(formSpreeEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (response.ok) {
-                    document.getElementById('submission-form').style.display = 'none';
-                    document.getElementById('submission-success').style.display = 'block';
-                } else {
-                    alert('There was a problem submitting your responses. Please try again.');
-                    document.getElementById('submit-all-btn').disabled = false;
-                    document.getElementById('submit-all-btn').textContent = 'Submit Evaluation';
-                }
-            })
-            .catch(error => {
-                console.error('Submission error:', error);
+        // Send data to FormSpree
+        fetch(formSpreeEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                document.getElementById('submission-form').style.display = 'none';
+                document.getElementById('submission-success').style.display = 'block';
+                
+                // 保存到localStorage作为备份
+                localStorage.setItem('videoQuestionnaireSubmission', JSON.stringify(data));
+            } else {
+                console.error('Form submission failed:', response.status, response.statusText);
                 alert('There was a problem submitting your responses. Please try again.');
                 document.getElementById('submit-all-btn').disabled = false;
                 document.getElementById('submit-all-btn').textContent = 'Submit Evaluation';
-            });
-            */
-        }, 1500);
+            }
+        })
+        .catch(error => {
+            console.error('Submission error:', error);
+            alert('There was a problem submitting your responses. Please try again.');
+            document.getElementById('submit-all-btn').disabled = false;
+            document.getElementById('submit-all-btn').textContent = 'Submit Evaluation';
+        });
     }
 }); 
