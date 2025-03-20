@@ -1,4 +1,4 @@
-# Video Technique Evaluation Questionnaire
+# Expert Video Evaluation Questionnaire
 
 This is a GitHub Pages website for conducting video technique evaluations in a questionnaire format. Users can watch videos, compare different technique descriptions, and provide feedback.
 
