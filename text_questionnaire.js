@@ -292,15 +292,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Use the scenario_text from the JSON data or create a default if not available
-        let scenarioText = item.scenario_text || "A student is practicing a skill.";
+        let scenarioText = item.scenario_text || "A student is performing a skill.";
         
-        // Determine instruction text based on whether it's a 'ge' (good execution) or 'tips' file
-        let instructionText;
-        if (item.is_ge) {
-            instructionText = "Based on your expertise, which of the following feedback options best describes this good performance?";
-        } else {
-            instructionText = "Based on your expertise, which of the following feedback options would you provide to help them improve?";
-        }
+        // Get the feedback type based on is_ge flag
+        let feedbackType = item.is_ge ? "good execution" : "tips for improvement";
+        
+        // Create the instruction text
+        let instructionText = `Here are some expert feedback options (${feedbackType}). Which one best describes this performance?`;
         
         const questionContainer = document.getElementById('question-container');
         
