@@ -1,14 +1,678 @@
 [
   {
-    "id": "guitar_technique_1",
-    "videoUrl": "videos/converted/gp01_153_157_converted.mp4",
-    "groundTruth": "The participant should consider moving their leg over and sitting a bit taller to navigate the fingerboard and play the guitar more efficiently.",
-    "options": [
-      "The participant should consider moving their leg over and sitting a bit taller to navigate the fingerboard and play the guitar more efficiently.",
-      "The participant should lower their leg more to increase stability and lean further forward to access the lower frets more easily, as demonstrated in other sections where this posture enhanced comfort.",
-      "The participant should maintain a slouched posture to bring the guitar closer, as this will improve precision and help in accessing the higher frets more effectively, similar to techniques used in previous performances.",
-      "The participant should sit lower and extend their neck towards the fingerboard. This will automatically improve their finger dexterity and ensure smoother transitions, reflecting this highly effective technique used in complex passages.",
-      "The participant should keep their current seating posture but reposition their hands higher on the neck. This will address efficiency issues and create a smoother playstyle, capturing the fluidity seen in earlier sections where hand positioning was a key focus."
-    ]
+    "id": "guitar_1",
+    "groundTruth": "The guitarist should add crescendos to the middle of each measure, reaching a mezzo-forte dynamic, and then decrescendo towards the end, starting and ending each measure with a piano dynamic. This approach will highlight the harmony of the chord and make the section more interesting.",
+    "negative_comments": [
+      "The guitarist should maintain a consistent mezzo-forte dynamic throughout each measure without any crescendos. This uniform approach will effectively highlight the subtle nuances of the chord transitions and create a more engaging performance similar to the consistent dynamics in the earlier sections.",
+      "The guitarist should add decrescendos in the middle of each measure, reaching a piano dynamic before crescendoing towards a forte dynamic at the end. This technique will make the harmony of the chord more prominent and enhance the section's excitement, resembling the dynamic builds observed in the introduction.",
+      "The guitarist should focus on beginning each measure with a forte dynamic, then rapidly decrescendo to a pianissimo by the middle. This will naturally emphasize the chord harmony and increase the audience's interest, reflecting the initial excitement of the piece where several rapid dynamic changes were employed.",
+      "The guitarist should apply a sforzando accent at the start of each measure and maintain that intensity throughout. This consistency will address the dynamic blending issues and ensure that the measure captures the listener's attention, similar to the stable intensity apparent in the final segment of the performance."
+    ],
+    "scenario_text": "A guitar student is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_guitar_1.mp4"
+  },
+  {
+    "id": "guitar_2",
+    "groundTruth": "To improve, the participant should aim for more nail contact with the higher strings to ensure they are plucked sufficiently and resonate clearly, thereby achieving a better balance in sound where the melody, carried by the higher strings, stands out more.",
+    "negative_comments": [
+      "The participant should concentrate on using less nail contact with the higher strings to create a softer sound. This will allow the melody to blend more seamlessly with the lower string accompaniment, achieving the subtlety observed in the performance's opening passages.",
+      "The participant should aim for less contact with the nails on the higher strings in order to enhance their resonance. By minimizing nail contact, the strings will vibrate more freely, providing a clearer and louder melody projection akin to the initial sections.",
+      "The participant should focus on reducing the tension placed on the nails when plucking the higher strings. This will increase the string's resonance and ensure the melody stands out more distinctly against the other strings, reflecting the effective technique seen earlier in the performance.",
+      "The participant should increase the use of finger flesh instead of nails on the higher strings to resolve clarity issues. By doing this, the sound of the melody will gain a smoother, more rounded quality, similar to the tonal character observed in prior segments of the piece."
+    ],
+    "scenario_text": "A guitar student is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_guitar_2.mp4"
+  },
+  {
+    "id": "bike_3",
+    "groundTruth": "The participant should readjust the crescent wrench each time it's used to ensure the tightest fit possible on the axle nut, preventing the wrench from rocking up and down due to a sloppy fit.",
+    "negative_comments": [
+      "The participant should not readjust the crescent wrench with every use, as keeping it in a semi-tight position helps adjust to slight changes in nut size more efficiently.",
+      "The participant should heavily tighten the crescent wrench once at the start, as over-tightening prevents the wrench from slipping off through a self-locking mechanism.",
+      "The participant should adjust the crescent wrench only at the beginning, as continuous adjustment can lead to wrench wear, causing inefficiency in gripping the axle nut.",
+      "The participant should alternate between using a crescent wrench and an Allen key, as this mix of tools naturally compensates for any misalignment on the axle nut caused by a loose fit."
+    ],
+    "scenario_text": "A cycling student is having trouble with their bike technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_bike_3.mp4"
+  },
+  {
+    "id": "bike_4",
+    "groundTruth": "The participant should slightly deflate the tire to more easily maneuver it between the brake pads on the caliper, ensuring that no adjustments on the brakes are necessary afterward and avoiding the need to check the brakes for proper function since they won't have been opened or disconnected.",
+    "negative_comments": [
+      "The participant should fully inflate the tire before attempting to maneuver it between the brake pads, ensuring maximum clearance and reducing the likelihood of damaging the brake pads.",
+      "The participant should deflate the tire completely before maneuvering it between the brake pads, as a completely flat tire provides more stiffness and stability for precise handling.",
+      "The participant should slightly deflate the tire and disconnect the brake caliper to lower the risk of the brake losing its alignment, as this process helps maintain brake equilibrium.",
+      "To avoid having to adjust the brakes afterward, the participant should remove the brake pads entirely, providing a clearer path for the tire during reinflation after maneuvering."
+    ],
+    "scenario_text": "A cycling student is having trouble with their bike technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_bike_4.mp4"
+  },
+  {
+    "id": "bouldering_5",
+    "groundTruth": "The participant executes a dynamic move by sending the left hand to a pinch hold, skillfully placing the thumb on the left side and fingers on the right, preparing for a wave-out hand movement. This grip allows for immediate pressure application through squeezing and pulling back on the hold, requiring the climber to engage the arm continuously, especially with the elbow out to the left side for directional pull.",
+    "negative_comments": [
+      "The participant executes a stable move by sending the right hand to a sloper hold, positioning the thumb on top and the fingers underneath, which facilitates pushing rather than squeezing the hold. This technique relies on pushing the body upward with minimal arm engagement.",
+      "The participant positions her elbow inwards to the right side for a directional pull, which reduces reliance on pulling back and instead uses sideways pressure for stability before moving upwards.",
+      "The participant completes a lock-off with the left arm while simultaneously reaching the pinch hold, allowing a controlled movement without needing immediate pressure application on the hold.",
+      "To bypass any need for directional pulling, the climber relies on a jam with the foot below the pinch hold, creating a stable base for the next hand move."
+    ],
+    "scenario_text": "A climbing student is executing good bouldering movements.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_bouldering_5.mp4"
+  },
+  {
+    "id": "bouldering_6",
+    "groundTruth": "The participant cleverly recycles the bottom left hand to momentarily relieve the weight from her lower body, rather than relying solely on an awkward one-arm hang.",
+    "negative_comments": [
+      "The participant cleverly shifts her right hand to momentarily relieve the weight from her upper body, minimizing strain on her legs.",
+      "The participant maintains a firm grip with both hands, opting to support her full body weight until she is ready to move her left foot upward.",
+      "The participant performs a dynamic toe hook to momentarily relieve pressure from her arms, conserving energy for a powerful upward movement.",
+      "Utilizing a smooth dyno maneuver, the participant propels herself upwards, avoiding any need to relieve pressure from her lower body."
+    ],
+    "scenario_text": "A climbing student is executing good bouldering movements.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_bouldering_6.mp4"
+  },
+  {
+    "id": "cpr_7",
+    "groundTruth": "The participant demonstrates good technique with proper hand placement on the lower half of the sternum and maintaining straight elbows. Their body posture is correct, hinging at the hips to provide effective compressing motion.",
+    "negative_comments": [
+      "The participant demonstrates good technique with proper hand placement on the upper half of the sternum and maintaining bent elbows. Their body posture is correct, hinging at the hips to provide effective compressing motion.",
+      "The participant demonstrates good technique with proper hand placement on the lower half of the sternum and maintaining straight elbows. Their body posture is correct, rocking at the shoulders to provide effective compressing motion.",
+      "The participant demonstrates good technique with proper hand placement on the lower half of the sternum and maintaining straight elbows. Their body posture is correct, and the foot placement adjustment is key to providing effective compressing motion.",
+      "The participant demonstrates good technique with proper hand placement on the lower half of the sternum and maintaining straight elbows. Their body posture is correct, and alternating hand positions between sets to provide effective compressing motion."
+    ],
+    "scenario_text": "A CPR student is executing a good emergency procedure.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_cpr_7.mp4"
+  },
+  {
+    "id": "cpr_8",
+    "groundTruth": "The participant maintains a good compression rate, keeping it between 100 and 120 beats per minute, and achieves the appropriate depth of at least 2 inches (or 5 centimeters) for each compression.",
+    "negative_comments": [
+      "The participant maintains a good compression rate, keeping it between 80 and 100 beats per minute, and achieves the appropriate depth of approximately 3 inches for each compression.",
+      "The participant maintains a good compression rate, keeping it between 100 and 120 beats per minute, and achieves the appropriate depth of at least 1 inch (or 2.5 centimeters) for each compression.",
+      "The participant maintains a good compression rate, keeping it between 100 and 120 beats per minute, and ensures thorough upper chest vibrations without compromising the depth required for each compression.",
+      "The participant maintains a good compression rate, keeping it between 100 and 120 beats per minute, and includes a pause for breath synchronization every few compressions."
+    ],
+    "scenario_text": "A CPR student is executing a good emergency procedure.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_cpr_8.mp4"
+  },
+  {
+    "id": "piano_9",
+    "groundTruth": "The participant successfully shows contrast between two kinds of accents, demonstrating how the amount of vertical motion in the hand affects the sound.",
+    "negative_comments": [
+      "The participant successfully shows contrast between two kinds of accents, demonstrating how the amount of horizontal motion in the hand affects the sound.",
+      "The participant successfully shows contrast between staccato and legato styles, demonstrating how the amount of vertical motion in the hand affects the sound.",
+      "The participant varies the sound quality by manipulating the pedal, demonstrating how different levels of sustain can affect the overall tone.",
+      "The participant focuses on finger independence, demonstrating contrast in dynamics by varying the finger pressure on each key."
+    ],
+    "scenario_text": "A piano student is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_piano_9.mp4"
+  },
+  {
+    "id": "piano_10",
+    "groundTruth": "The participant effectively practices by isolating each hand, starting with just the right hand and then adding the left hand, which is a good technique for learning pieces.",
+    "negative_comments": [
+      "The participant effectively practices by isolating each hand, starting with just the left hand and then adding the right hand, which is a good technique for learning pieces.",
+      "The participant effectively practices by using both hands simultaneously, which is a good technique for refining speed.",
+      "The participant successfully uses the pedal in isolation first, which is a great method for mastering the tempo.",
+      "The participant effectively moves the metronome from one side to the other to better synchronize hand coordination."
+    ],
+    "scenario_text": "A piano student is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_piano_10.mp4"
+  },
+  {
+    "id": "covid_11",
+    "groundTruth": "The participant should immediately place the swab in the tube and perform 15 circular motions to transfer the sample effectively from the swab to the tube.",
+    "negative_comments": [
+      "The participant should immediately place the swab on the table and perform 15 circular motions in the air to transfer the sample effectively to the tube.",
+      "The participant should immediately place the swab in the tube and perform 15 back-and-forth motions to release the sample while avoiding contamination.",
+      "The participant should immediately place the swab in the tube and perform 15 vertical lifts to ensure the sample is absorbed by the liquid due to gravitational pull.",
+      "The participant should immediately soak the swab in the tube for 15 minutes to effectively dissolve the sample, ensuring complete transfer."
+    ],
+    "scenario_text": "A healthcare worker is struggling with their COVID-19 procedures.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_covid_11.mp4"
+  },
+  {
+    "id": "covid_12",
+    "groundTruth": "The participant should ensure to insert the swab directly into the tube after swabbing their nose and perform about 15 circular or swishing motions to effectively transfer the sample from the swab to the tube.",
+    "negative_comments": [
+      "The participant should ensure to tap the swab against the outside of the tube after swabbing their nose and perform about 15 gentle flicks to effectively transfer the sample from the swab to the tube.",
+      "The participant should ensure to soak the swab in a separate container of solution after swabbing their nose and perform about 15 direct plunges into the tube to maximize sample saturation.",
+      "The participant should ensure to hold the swab vertically while counting to 15 as a static transfer method after swabbing their nose, which aids in preserving sample integrity.",
+      "The participant should ensure to wrap the swab in gauze after swabbing their nose and perform 15 steps away from the testing area to allow for sample recollection before placing it in the tube."
+    ],
+    "scenario_text": "A healthcare worker is struggling with their COVID-19 procedures.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_covid_12.mp4"
+  },
+  {
+    "id": "salad_13",
+    "groundTruth": "The participant should pick up the cutting board with her left hand and use her right hand to scrape all of the vegetables into the mixing bowl at once for efficiency, instead of transferring them in batches with her hands.",
+    "negative_comments": [
+      "The participant should hold the mixing bowl with her left hand while using her right hand to individually place each vegetable from the cutting board into the bowl for better precision.",
+      "The participant should use her left hand to pick up the individual vegetables and her right hand to open the lid of the mixing bowl before transferring, as this method will prevent any vegetables from dropping outside the bowl.",
+      "The participant should tilt the cutting board to a 45-degree angle and let gravity naturally slide the vegetables into the mixing bowl, as this process will ensure a uniform distribution.",
+      "The participant should first arrange the vegetables into stacks before attempting to place them in the mixing bowl, which will contribute to a more organized transfer."
+    ],
+    "scenario_text": "A cooking student is struggling with their salad preparation technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_salad_13.mp4"
+  },
+  {
+    "id": "salad_14",
+    "groundTruth": "The participant should use a bowl to clear the cutting board and create more workspace.",
+    "negative_comments": [
+      "The participant should stack ingredients on the cutting board's edge to make more workspace, as this will clear the center.",
+      "The participant should use a small plate to clear the cutting board because it prevents the ingredients from sticking together.",
+      "The participant should use a knife to push the ingredients to the side of the cutting board, as this will expand the board and create more space.",
+      "The participant should place each ingredient in a separate section of the cutting board to create more workspace and prevent clutter."
+    ],
+    "scenario_text": "A cooking student is struggling with their salad preparation technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_salad_14.mp4"
+  },
+  {
+    "id": "cpr_15",
+    "groundTruth": "The participant needs to give two breaths, each one lasting about one second, and ensure they are looking at the person on the ground rather than just putting their ear down.",
+    "negative_comments": [
+      "The participant should focus on extending each breath to at least 3 seconds to ensure full lung inflation when delivering breaths.",
+      "The participant needs to give four breaths, each only lasting half a second, to quickly alternate between compressions and breaths.",
+      "The participant should watch the chest rise and fall to match their own breathing rate and optimize ventilation efficiency.",
+      "For better results, the participant should lean their ear close to the chest for sounds rather than focusing on visual observation during breaths."
+    ],
+    "scenario_text": "A CPR student is struggling with their emergency technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_cpr_15.mp4"
+  },
+  {
+    "id": "cpr_16",
+    "groundTruth": "The participant should adjust her hand placement to be right on the bottom of the sternum for correct compression depth, ensuring it makes a clicking noise if done correctly. She needs to increase her compression rate to 100-120 per minute and count the compressions out loud.",
+    "negative_comments": [
+      "The participant could improve her CPR technique by placing her hands at the top of the sternum to allow for better leverage and increase compression depth efficiency.",
+      "The participant could improve her CPR technique by positioning her hands near the ribs to maximize the audible clicking sound, indicating proper compression is being achieved.",
+      "The participant could improve her CPR technique by varying her compression rate between 60 and 80 per minute, which will help prevent over-stimulation of the heart muscles.",
+      "The participant could improve her CPR technique by focusing on a uniform compression depth, prioritizing a constant hand position rather than increasing the compression rate."
+    ],
+    "scenario_text": "A CPR student is struggling with their emergency technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_cpr_16.mp4"
+  },
+  {
+    "id": "omelet_17",
+    "groundTruth": "The preparer demonstrates a creative and efficient method for removing excess grease from the pan by using a paper towel folded into quarters and chopsticks, which is particularly effective given the minimal amount of grease produced by the ground meat.",
+    "negative_comments": [
+      "The preparer demonstrates a creative and efficient method for removing juice from the vegetable by using a paper towel folded into quarters and chopsticks, which is particularly effective given the minimal amount of moisture produced by the spinach.",
+      "The preparer demonstrates a creative and efficient method for adding extra flavor to the pan by using a paper towel folded into quarters and chopsticks, which is particularly effective given the minimal amount of grease produced by the ground meat.",
+      "The preparer demonstrates a creative and efficient method for removing excess grease from the pan by using a sponge, which is particularly effective given the minimal amount of grease produced by the ground meat.",
+      "The preparer demonstrates a creative and efficient method for removing excess grease from the pan by using a paper towel folded into quarters and a spatula, which is particularly effective given the minimal amount of grease produced by the ground meat."
+    ],
+    "scenario_text": "A cooking student is executing a good omelet preparation.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_omelet_17.mp4"
+  },
+  {
+    "id": "omelet_18",
+    "groundTruth": "The participant successfully cooks ground meat, using a plastic spatula to break it apart, creating a consistent and caramelized crumble, indicating the meat is cooked through.",
+    "negative_comments": [
+      "The participant successfully fries ground meat, using a wooden spoon to break it apart, creating a consistent and caramelized crumble, indicating the meat is cooked through.",
+      "The participant successfully cooks ground meat, using a plastic spatula to stir it continuously, creating a consistent and caramelized crumble, indicating the meat is cooked through.",
+      "The participant successfully cooks ground meat using a plastic spatula to break it apart and adds diced peppers to create a consistent and caramelized crumble.",
+      "The participant successfully cooks ground meat, using a plastic spatula to break it apart, while also adding shredded cheese to create a consistent and caramelized crumble."
+    ],
+    "scenario_text": "A cooking student is executing a good omelet preparation.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_omelet_18.mp4"
+  },
+  {
+    "id": "soccer_19",
+    "groundTruth": "The expert's commentary highlights the importance of maintaining a locked position in the foot while following through and ensuring the toe points in the intended direction of the ball. To improve, the player could focus on the alignment of the body, particularly ensuring that the chest and hips are consistently aligned with the ball's direction to enhance control and power. Additionally, emphasizing the forward movement of the body in sync with the ball can further improve control and power in the follow-through.",
+    "negative_comments": [
+      "The expert suggests that the player should focus on having a loose foot positioning while following through, allowing for more natural flexibility in the kick. Furthermore, the player should ensure their chest and hips are consistently rotated away from the ball's direction to add curve and unpredictability to the shot.",
+      "The player should ideally lock their foot at a 90-degree angle for maximum leverage. Additionally, ensuring that the chest remains upright and not aligned with the ball can help prevent overshooting. Forward movement should be limited to maintain precise control over the ball's trajectory.",
+      "Maintaining a locked foot is necessary to allow the ball to spin more on impact, aiding in stability. The player must also ensure that their hips and chest face toward the touchline to ensure a lighter shot that won't overshoot the target. Forward movement should be abandoned to prevent momentum loss.",
+      "To address the challenges in follow-through, the player should practice with varying foot positioning angles to see which provides the least power loss. Ensuring the chest and hips maintain a backward lean from the ball's path will paradoxically generate more speed on contact."
+    ],
+    "scenario_text": "A soccer player is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_soccer_19.mp4"
+  },
+  {
+    "id": "soccer_20",
+    "groundTruth": "The participant should extend their arms out to the side to improve balance, especially while pivoting on the left leg.",
+    "negative_comments": [
+      "The participant should keep their arms tightly at their sides to streamline movement and avoid balance disruptions, especially while pivoting on the left leg.",
+      "The participant should extend their arms fully above their head to create a greater pivot leverage. This will help to maintain balance more effectively than side extensions.",
+      "The participant should ensure they pivot only on the heel of their left foot to allow their arms to naturally stabilize their body without extending them outward.",
+      "The participant should rely solely on visual indicators for balance, focusing on a fixed point to maintain stability while pivoting, ignoring any arm positioning."
+    ],
+    "scenario_text": "A soccer player is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_soccer_20.mp4"
+  },
+  {
+    "id": "salad_21",
+    "groundTruth": "The participant is salting lightly.",
+    "negative_comments": [
+      "The participant is peppering lightly.",
+      "The participant is stirring lightly while seasoning.",
+      "The participant is salting lightly, while using a spice grinder to add nutmeg.",
+      "The participant is salting lightly, but also squeezing lemon juice over the salad."
+    ],
+    "scenario_text": "A cooking student is executing a good salad preparation.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_salad_21.mp4"
+  },
+  {
+    "id": "salad_22",
+    "groundTruth": "The participant demonstrates good practice by moving over the trash can to discard eggshells, acknowledging that eggshells can be crumbly and this method simplifies cleanup.",
+    "negative_comments": [
+      "The participant demonstrates good practice by moving over the trash can to store eggshells, acknowledging that this makes them easier to reuse.",
+      "The participant demonstrates good practice by moving over the trash can to discard breadcrumbs, acknowledging that breadcrumbs can be messy and this method simplifies cleanup.",
+      "The participant demonstrates good practice by moving over the trash can to discard eggshells, carefully crushing each shell with their hands for easier disposal into a compost bin nearby.",
+      "The participant demonstrates good practice by moving over the trash can to discard eggshells, but before discarding, they rinse each shell under a tap to prevent any sticky residue."
+    ],
+    "scenario_text": "A cooking student is executing a good salad preparation.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_salad_22.mp4"
+  },
+  {
+    "id": "cooking_23",
+    "groundTruth": "The participant properly removed the tomato core, which is important to avoid adding a bitter taste and hard texture to dishes.",
+    "negative_comments": [
+      "The participant skillfully left the tomato core intact, which is important to retain the extra flavor and enhance the dish's texture.",
+      "The participant properly removed extra skin from the tomato, which is important to avoid adding a bitter taste and hard texture to dishes.",
+      "The participant properly removed the tomato core, which they preserved for later use as a flavorful garnish to enhance the dish.",
+      "The participant properly removed the tomato core, which they set aside to blend into a sauce for an added layer of freshness in the dish."
+    ],
+    "scenario_text": "A cooking student is executing a good cooking performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_cooking_23.mp4"
+  },
+  {
+    "id": "cooking_24",
+    "groundTruth": "The participant properly mixes all ingredients in the bowl, ensuring an even incorporation of seasonings, egg, and vegetables.",
+    "negative_comments": [
+      "The participant properly layers all ingredients in the bowl, ensuring an even display of seasonings, egg, and vegetables.",
+      "The participant properly stirs all ingredients in the bowl, ensuring an even separation of seasonings, egg, and vegetables.",
+      "The participant properly mixes all ingredients in the bowl, ensuring an even incorporation of seasonings, egg, and vegetables, before refrigerating the mixture to let flavors blend overnight.",
+      "The participant properly mixes all ingredients in the bowl, ensuring an even incorporation of seasonings, egg, and vegetables, while adding a dash of lemon juice between layers for extra flavor."
+    ],
+    "scenario_text": "A cooking student is executing a good cooking performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_cooking_24.mp4"
+  },
+  {
+    "id": "covid_25",
+    "groundTruth": "The participant does a good job of mixing her sample with the reagent solution by swirling and spinning the swab in the test tube, effectively agitating the mixture and ensuring the sample is transferred from the swab into the tube.",
+    "negative_comments": [
+      "The participant does a good job of mixing her sample with the reagent solution by shaking the test tube, effectively agitating the mixture and ensuring the sample is transferred from the swab into the tube.",
+      "The participant does a good job of mixing her sample with the reagent solution by squeezing the swab above the test tube, effectively agitating the mixture and ensuring the sample is transferred from the swab into the tube.",
+      "The participant does a good job of mixing her sample with the reagent solution by tapping the test tube gently on the table, effectively agitating the mixture and ensuring the sample is transferred from the swab into the tube.",
+      "The participant does a good job of mixing her sample with the reagent solution by using a stirrer to blend the contents of the test tube, effectively agitating the mixture and ensuring the sample is transferred from the swab into the tube."
+    ],
+    "scenario_text": "A healthcare worker is executing good COVID-19 procedures.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_covid_25.mp4"
+  },
+  {
+    "id": "covid_26",
+    "groundTruth": "The participant is commended for putting back the second test to avoid opening another one and ensuring its future usability.",
+    "negative_comments": [
+      "The participant is commended for stacking the unused tests neatly to avoid clutter and ensure its future usability.",
+      "The participant is commended for labeling the second test to avoid opening another one and ensuring its future usability.",
+      "The participant is commended for sealing the test with tape to avoid opening another one and ensuring its future usability.",
+      "The participant is commended for photographing the test box for documentation purposes and ensuring its future usability."
+    ],
+    "scenario_text": "A healthcare worker is executing good COVID-19 procedures.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_covid_26.mp4"
+  },
+  {
+    "id": "piano_27",
+    "groundTruth": "The participant needs to ensure that their finger joints, especially the middle finger, do not collapse inward but rather stay outward.",
+    "negative_comments": [
+      "The participant should focus on letting their finger joints collapse slightly inward as this technique helps to create a softer sound.",
+      "The participant needs to keep their finger joints inward to achieve greater speed and agility on the keys.",
+      "To enhance finger strength and prevent collapsing joints, the player should press down on the keys with all fingers at once, ensuring that each joint is properly aligned.",
+      "To address finger joint collapse, the participant should practice with their hands positioned flat on the keyboard, providing a solid foundation for finger movements."
+    ],
+    "scenario_text": "A piano student is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_piano_27.mp4"
+  },
+  {
+    "id": "piano_28",
+    "groundTruth": "The participant could improve by increasing the curvedness of their left hand fingers, similar to the right hand, for a more consistent and effective playing technique.",
+    "negative_comments": [
+      "The participant should straighten their right hand fingers to match the left hand, aiming for a more consistent and effective playing technique.",
+      "To enhance playing technique, the participant should reduce the finger curvature on both hands, as straighter fingers allow for better key reach and consistency.",
+      "The participant should focus on moving the seat further back to improve finger curvature, which will naturally lead to a more consistent playing technique.",
+      "Instead of working on finger curvature, the participant should apply more wrist movement to ensure consistent and effective playing."
+    ],
+    "scenario_text": "A piano student is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_piano_28.mp4"
+  },
+  {
+    "id": "guitar_29",
+    "groundTruth": "The guitarist demonstrates technical ease, achieves clear sound and accuracy of pitches, and maintains a steady tempo while playing a new section of the piece.",
+    "negative_comments": [
+      "The guitarist demonstrates technical ease, achieves fuzzy sound and accuracy of pitches, and maintains a fluctuating tempo while playing a new section of the piece.",
+      "The guitarist demonstrates technical difficulty, achieves clear sound and accuracy of pitches, and maintains a steady tempo while stumbling through the piece.",
+      "The guitarist demonstrates technical ease and clear sound but frequently alters dynamics excessively during the new section.",
+      "While showcasing technical ease, the guitarist introduces slides between notes to add expressiveness, which was absent from the original clarity-focused section."
+    ],
+    "scenario_text": "A guitar student is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_guitar_29.mp4"
+  },
+  {
+    "id": "guitar_30",
+    "groundTruth": "The guitarist demonstrates a good technique by alternating between his pointer and middle finger to play faster notes clearly.",
+    "negative_comments": [
+      "The guitarist demonstrates a good technique by alternating between his thumb and ring finger to play slower notes clearly.",
+      "The guitarist demonstrates a good technique by using only his pointer finger to play faster notes with muddled clarity.",
+      "The guitarist demonstrates a good technique by alternating between his pointer and middle finger while engaging in intricate finger-tapping sequences.",
+      "The guitarist demonstrates a good technique by alternating between a pick and fingers to play faster notes clearly."
+    ],
+    "scenario_text": "A guitar student is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_guitar_30.mp4"
+  },
+  {
+    "id": "violin_31",
+    "groundTruth": "The participant needs to focus on improving their intonation. They should work on accurately placing their third finger without having to adjust it by sliding down the fingerboard.",
+    "negative_comments": [
+      "The participant is facing intonation issues because they are not using enough bow speed when playing. Improving intonation could be achieved by increasing their bowing velocity to stabilize their pitch production.",
+      "The intonation problems are primarily due to the participant's incorrect thumb positioning. By fixing the thumb position, they can naturally improve finger placement and intonation.",
+      "The participant's intonation inconsistencies come from the use of too much vibrato on their third finger, which gives the impression of inconsistent pitch placement.",
+      "To fix the intonation, the participant should focus on keeping their elbow lower. This will ensure the third finger lands precisely without needing further adjustments."
+    ],
+    "scenario_text": "A violin student is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_violin_31.mp4"
+  },
+  {
+    "id": "violin_32",
+    "groundTruth": "The participant needs to improve their timing to achieve better synchronicity in their performance.",
+    "negative_comments": [
+      "The participant's timing issues seem to arise from them looking at their fingers too often, which causes unnecessary delays. If they keep their eyes on the sheet music, their performance will sync better.",
+      "To improve synchronicity, the participant needs to use more rosin on their bow. The current lack of rosin is causing the strings to resonate unevenly, disrupting timing.",
+      "The uneven timing in performance is due to the angled position of the participant's music stand. Fixing the angle would instantly enhance their timing and synchronicity.",
+      "Achieving better timing will require the participant to slow down the speed of their bow changes. Currently, their fast bow transitions are causing the performance to lose synchronicity."
+    ],
+    "scenario_text": "A violin student is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_violin_32.mp4"
+  },
+  {
+    "id": "soccer_33",
+    "groundTruth": "The participant creates some space for his run-up in the initial stage of the penalty kick, which is a positive aspect of his execution.",
+    "negative_comments": [
+      "The participant carefully positions himself closer to the ball in the initial stage of the penalty kick, which contributes to the effectiveness of his execution.",
+      "The participant focuses on reducing space for his run-up in the initial stage of the penalty kick, which is seen as an effective tactic in his execution.",
+      "The participant creates some space for his run-up in the initial stage of the penalty kick and performs a quick backward shuffle, which is a positive aspect of his execution.",
+      "The participant creates some space for his run-up in the initial stage of the penalty kick, followed by an air kick, which is a positive aspect of his execution."
+    ],
+    "scenario_text": "A soccer player is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_soccer_33.mp4"
+  },
+  {
+    "id": "soccer_34",
+    "groundTruth": "The participant makes good contact with the ball by maintaining a nice flat surface and striking right at the back of the ball. His foot is also slightly in the air, ensuring he strikes through the center of the ball, which helps the ball roll smoothly without flicking up or bouncing.",
+    "negative_comments": [
+      "The participant makes good contact with the ball by maintaining a slightly curved surface and striking at the top of the ball. His foot is also slightly off the ground, ensuring he hits the side of the ball, which helps the ball roll smoothly without flicking up or bouncing.",
+      "The participant makes solid contact with the ball by maintaining a nice flat surface and striking the bottom of the ball. His foot is also slightly in the air, ensuring he strikes the edge of the ball, which helps the ball roll smoothly without flicking up or bouncing.",
+      "The participant makes good contact with the ball by maintaining a nice flat surface and striking right at the back of the ball. He performs a quick shuffle step before impact, ensuring he strikes through the center of the ball, which helps the ball roll smoothly without flicking up or bouncing.",
+      "The participant makes good contact with the ball by maintaining a nice flat surface and striking right at the back of the ball. His foot is also slightly in the air and he follows through with a spin, ensuring he strikes through the center of the ball, which helps the ball roll smoothly without flicking up or bouncing."
+    ],
+    "scenario_text": "A soccer player is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_soccer_34.mp4"
+  },
+  {
+    "id": "bike_35",
+    "groundTruth": "The participant ensures the chain is correctly positioned before installing the wheel.",
+    "negative_comments": [
+      "The participant ensures the chain is correctly oiled before installing the wheel.",
+      "The participant ensures the chain is correctly tightened before installing the wheel.",
+      "The participant ensures the chain is correctly positioned and the brakes are adjusted before installing the wheel.",
+      "The participant ensures the chain is correctly positioned and the spokes are aligned before installing the wheel."
+    ],
+    "scenario_text": "A cycling student is executing a good bike performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_bike_35.mp4"
+  },
+  {
+    "id": "bike_36",
+    "groundTruth": "The participant demonstrates a good practice by loosening the axle nuts by hand and leaving them on the axles to prevent any parts from getting lost.",
+    "negative_comments": [
+      "The participant demonstrates a good practice by tightening the axle nuts by hand and leaving them on the axles to prevent any parts from getting lost.",
+      "The participant demonstrates a good practice by removing the axle nuts completely and placing them nearby to prevent any parts from getting lost.",
+      "The participant demonstrates a good practice by loosening the axle nuts by hand and removing a wheel reflector to prevent any parts from getting lost.",
+      "The participant demonstrates a good practice by loosening the axle nuts by hand, applying grease to the bearings, and leaving them on the axles to prevent any parts from getting lost."
+    ],
+    "scenario_text": "A cycling student is executing a good bike performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_bike_36.mp4"
+  },
+  {
+    "id": "basketball_37",
+    "groundTruth": "The player executes a good follow through towards the direction of the target area on the release during a right-handed reverse layup attempt. This skill allows the ball to hit around the top right corner of the box on the backboard, providing it with a proper angle to drop inside the rim.",
+    "negative_comments": [
+      "The player executes a good follow through towards the direction of the target area on the release during a left-handed reverse layup attempt. This skill allows the ball to hit around the top right corner of the box on the backboard, providing it with a proper angle to drop inside the rim.",
+      "The player executes a good follow through towards the direction of the target area on the release during a right-handed reverse layup attempt. This skill allows the ball to hit around the bottom left corner of the box on the backboard, providing it with a proper angle to drop inside the rim.",
+      "The player executes a good follow through towards the direction of the target area on the release during a right-handed reverse layup attempt. Before this, he made a no-look pass which helped distract the defense, providing it with a proper angle to drop inside the rim.",
+      "The player executes a good follow through towards the direction of the target area on the release during a right-handed reverse layup attempt. He hesitates at the three-point line before driving to the basket, providing it with a proper angle to drop inside the rim."
+    ],
+    "scenario_text": "A basketball player is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_basketball_37.mp4"
+  },
+  {
+    "id": "basketball_38",
+    "groundTruth": "The participant displayed proper footwork for a mid-range jump shot by stepping with his left foot first and then bringing his right foot down into the shooting motion. Additionally, he positioned the ball correctly above his shoulder, transitioning smoothly into his shooting pocket, which assists in creating the optimal arc and rotation needed for the shot to go above the rim and potentially score.",
+    "negative_comments": [
+      "The participant displayed proper footwork for a mid-range jump shot by stepping with his right foot first and then bringing his left foot down into the shooting motion. Additionally, he positioned the ball correctly above his shoulder, transitioning smoothly into his shooting pocket, which assists in creating the optimal arc and rotation needed for the shot to go above the rim and potentially score.",
+      "The participant displayed proper footwork for a mid-range jump shot by stepping with his left foot first and then bringing his right foot down into the shooting motion. Additionally, he positioned the ball correctly below his shoulder, transitioning smoothly into his shooting pocket, which assists in creating the optimal arc and rotation needed for the shot to go above the rim and potentially score.",
+      "The participant displayed proper footwork for a mid-range jump shot by stepping with his left foot first and then bringing his right foot down into the shooting motion. Additionally, he crossed the ball between his legs before positioning it above his shoulder, transitioning smoothly into his shooting pocket, which assists in creating the optimal arc and rotation needed for the shot to go above the rim and potentially score.",
+      "The participant displayed proper footwork for a mid-range jump shot by stepping with his left foot first and then bringing his right foot down into the shooting motion. Additionally, he performed a spin move before positioning the ball correctly above his shoulder, transitioning smoothly into his shooting pocket, which assists in creating the optimal arc and rotation needed for the shot to go above the rim and potentially score."
+    ],
+    "scenario_text": "A basketball player is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_basketball_38.mp4"
+  },
+  {
+    "id": "omelet_39",
+    "groundTruth": "The participant should start peeling the onion from the root end, not the stem end, as it allows the papery skin to come off more easily.",
+    "negative_comments": [
+      "The participant should start cutting the onion in half before peeling to make the skin removal process faster, as dividing the onion halves the resistance of the skin.",
+      "The participant should peel the onion from the stem end because starting there uses gravity to pull the papery skin off the onion more efficiently.",
+      "The participant should soak the onion in water before peeling from the stem end, as this softens the skin and prevents the onion from causing tears when cut.",
+      "The participant should slice the onion into rings before peeling the outer layer, as this method ensures even peeling and less waste of the onion flesh."
+    ],
+    "scenario_text": "A cooking student is struggling with their omelet preparation technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_omelet_39.mp4"
+  },
+  {
+    "id": "omelet_40",
+    "groundTruth": "The participant should use less filling in comparison to the egg to ensure the proportions are balanced in the omelette.",
+    "negative_comments": [
+      "The participant should use more filling relative to the egg in order to ensure the omelette maintains its flat shape, as this prevents puffing during cooking.",
+      "The participant should pack the omelette densely with filling, as this keeps the egg mixture uniformly spread and prevents it from overcooking too rapidly.",
+      "The participant should add layers of filling before pouring in the egg mixture, as this ensures the flavors meld better and keeps the omelette from sticking.",
+      "The participant should mix the filling thoroughly with the eggs before pouring into the pan, as this ensures the omelette cooks evenly without any dry or undercooked spots."
+    ],
+    "scenario_text": "A cooking student is struggling with their omelet preparation technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_omelet_40.mp4"
+  },
+  {
+    "id": "dance_41",
+    "groundTruth": "The dancer should ensure all her steps are equal in size; the side basic steps should not be smaller than the rest.",
+    "negative_comments": [
+      "The dancer should make her side basic steps larger than the rest to create visual interest, rather than ensuring all her steps are equal in size.",
+      "The dancer should bend her knees deeper during side basic steps to give the illusion of smaller steps, which will enhance the routine's precision.",
+      "The dancer should decrease the size of her side basic steps to maintain balance, as smaller movements stabilize the dancer more effectively.",
+      "The dancer should add a quick turn after each side basic step to maintain consistent energy levels, rather than focusing on step size equality."
+    ],
+    "scenario_text": "A dance student is struggling with their movement technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_dance_41.mp4"
+  },
+  {
+    "id": "dance_42",
+    "groundTruth": "The participant should go up on their toes a bit when stepping forward and back to avoid flat feet and articulate the feet for a level change.",
+    "negative_comments": [
+      "The participant should remain flat-footed when stepping forward and back, as this will help them maintain balance and avoid unnecessary level changes.",
+      "The participant should keep their heels firmly on the ground because this will create a stronger connection with the floor, ensuring smoother transitions rather than going up on their toes.",
+      "The participant should lift their arms as they step instead of going up on their toes, as their arm movements will naturally lead to better articulation of the feet and avoid flat feet.",
+      "The participant should focus on doing more side-to-side movements when stepping to prevent the appearance of flat feet instead of going up on their toes for a level change."
+    ],
+    "scenario_text": "A dance student is struggling with their movement technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_dance_42.mp4"
+  },
+  {
+    "id": "cooking_43",
+    "groundTruth": "The participant should use a measuring spoon when seasoning the egg mixture with salt to ensure the right amount is used.",
+    "negative_comments": [
+      "The participant should sprinkle salt over the egg mixture by hand to ensure a rustic and natural distribution of the seasoning.",
+      "The participant should avoid using a measuring spoon for salt in the egg mixture, as eyeballing the amount enhances the texture of the dish.",
+      "The participant should season the egg mixture by pouring salt directly from the shaker, as this method improves the blending of flavors.",
+      "The participant should dissolve salt in water first and then add it to the egg mixture to ensure even integration of the seasoning."
+    ],
+    "scenario_text": "A cooking student is struggling with their cooking technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_cooking_43.mp4"
+  },
+  {
+    "id": "cooking_44",
+    "groundTruth": "The participant should use a measuring spoon to season the eggs to ensure the seasoning is precise, with a recommendation of a fourth of a teaspoon of salt for the indicated quantity of eggs and tomatoes.",
+    "negative_comments": [
+      "The participant should use a measuring spoon to spread the salt evenly on the eggshells to ensure they absorb the flavor before cracking.",
+      "The participant should season the eggs by eyeballing the salt, as the pouring motion helps to aerate the salt for better integration with the eggs and tomatoes.",
+      "The participant should season the eggs with a teaspoon of salt for every egg added, as this approach helps balance acidity in the tomatoes when the eggs are cooked later.",
+      "The participant should sprinkle the salt directly onto the tomatoes before adding them to the eggs, as this preserves the eggs' freshness and stability during cooking."
+    ],
+    "scenario_text": "A cooking student is struggling with their cooking technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_cooking_44.mp4"
+  },
+  {
+    "id": "bouldering_45",
+    "groundTruth": "The participant should focus on applying weight onto the sloper hold after grabbing it open-handed to effectively use friction for a better grip.",
+    "negative_comments": [
+      "The participant should pull forcefully against the sloper hold after grabbing it openly to maximize grip strength on smooth surfaces.",
+      "By gripping the sloper hold with a pinch grip instead of open-handed, the participant can increase the surface contact area and thereby increase friction.",
+      "The participant should avoid using friction on the sloper hold initially to save skin wear for other tougher holds later in the route.",
+      "Instead of focusing on applying weight onto the sloper hold, the climber should prioritize using the sloper exclusively for balance while searching for better edges to hold."
+    ],
+    "scenario_text": "A climbing student is struggling with their bouldering technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_bouldering_45.mp4"
+  },
+  {
+    "id": "bouldering_46",
+    "groundTruth": "The participant should improve their footwork by using the edge instead of the side of the pinch, which would allow them to reach higher holds more easily and reduce stress on their body.",
+    "negative_comments": [
+      "The participant should improve their technique by using the heel of their foot instead of the toe on the pinch, providing better support and allowing for a higher reach.",
+      "By using the side of the foot on the pinch, the climber can generate more momentum, making it easier to reach higher holds without additional strain.",
+      "Switching to the side of the pinch for footwork will help the participant improve their grip strength, as it forces stronger engagement of the upper body.",
+      "Instead of focusing on foot placement, the climber should concentrate on gripping the holds more tightly, as this will naturally improve their reach and reduce stress on their body."
+    ],
+    "scenario_text": "A climbing student is struggling with their bouldering technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_bouldering_46.mp4"
+  },
+  {
+    "id": "dance_47",
+    "groundTruth": "The dancer performs the body roll pretty nicely and exhibits good eye contact to the front with nicely stretched out arms.",
+    "negative_comments": [
+      "The dancer performs the body roll pretty nicely and exhibits good eye contact to the side with nicely stretched out arms.",
+      "The dancer performs the body roll awkwardly but exhibits good eye contact to the front with nicely stretched out arms.",
+      "The dancer performs the body roll pretty nicely while keeping her feet firmly planted, exhibiting good eye contact to the front with nicely stretched out arms.",
+      "The dancer performs the body roll pretty nicely and exhibits good eye contact to the front while constantly shifting her weight back and forth."
+    ],
+    "scenario_text": "A dance student is executing a good movement performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_dance_47.mp4"
+  },
+  {
+    "id": "dance_48",
+    "groundTruth": "The dancer executes great turns and pivots, with a focus on outward direction and effective head rotation to whip the body around.",
+    "negative_comments": [
+      "The dancer executes great turns and pivots, with a focus on inward direction and minimal head rotation to stabilize the body around.",
+      "The dancer executes great turns and pivots, with a focus on a sideward direction and gentle head tilts to glide the body around.",
+      "The dancer executes great turns and pivots, with a focus on outward direction and precise leg extensions to whip the body around.",
+      "The dancer executes great turns and pivots, with a focus on outward direction and synchronized arm waves to whip the body around."
+    ],
+    "scenario_text": "A dance student is executing a good movement performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_dance_48.mp4"
+  },
+  {
+    "id": "violin_49",
+    "groundTruth": "The participant's execution of notes is incredibly clean and in tune.",
+    "negative_comments": [
+      "The violinist plays with a slightly loose grip, allowing for a deliberate, airy sound that immerses the listener in a dreamy atmosphere.",
+      "The music is characterized by a bold and sharp articulation, with the participant intentionally using a fast bowing technique to introduce a stark staccato effect.",
+      "The performer uses ricochet bowing to add a playful texture to the performance, which enhances the overall rhythm.",
+      "The participant applies extensive vibrato throughout the piece to intentionally add warmth and richness to each note."
+    ],
+    "scenario_text": "A violin student is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_violin_49.mp4"
+  },
+  {
+    "id": "violin_50",
+    "groundTruth": "The participant executes a lovely dynamic change.",
+    "negative_comments": [
+      "The participant maintains a consistent dynamic level, ensuring the stability of the tone across phrases.",
+      "The violinist executes a charming bowing pattern, focusing on maintaining a light touch with continuous even pressure.",
+      "The performer introduces a series of pizzicato plucks to create a subtle variation in dynamics, adding texture to the piece.",
+      "The violinist uses a series of fast tremolo bowing techniques to enhance the dynamic shifts, adding excitement to the performance."
+    ],
+    "scenario_text": "A violin student is executing a good performance.",
+    "is_ge": true,
+    "videoUrl": "videos/placeholder_violin_50.mp4"
+  },
+  {
+    "id": "basketball_51",
+    "groundTruth": "The participant should use the dribble to set up her feet properly, taking one big step with the left foot and lifting, instead of taking several small steps, to avoid traveling.",
+    "negative_comments": [
+      "The participant should focus on taking several small steps to ensure better footwork alignment and prevent traveling during the dribble setup.",
+      "The participant should use her shoulders to lean forward deeply, which will help stabilize her balance during the dribble and prevent traveling.",
+      "The participant should keep her feet very close together to improve balance and prevent any traveling call while dribbling.",
+      "The participant should pivot on her right foot multiple times to gain momentum, which will help avoid traveling during the dribble setup."
+    ],
+    "scenario_text": "A basketball player is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_basketball_51.mp4"
+  },
+  {
+    "id": "basketball_52",
+    "groundTruth": "The player should work on improving their shot accuracy to ensure the ball gets above the rim, creating the proper angle for a successful jump shot.",
+    "negative_comments": [
+      "The player should focus on releasing the ball from a lower angle to ensure the ball has a better chance of sliding under the rim for a successful jump shot.",
+      "The player should focus on aiming directly at the backboard, which will help in transferring power from the shoulders to ensure a successful jump shot.",
+      "The player should focus on jumping higher off the ground to increase the shot's speed, ensuring that the ball reaches the proper angle for a successful jump shot.",
+      "The player should focus on pulling the shooting elbow further out to improve the ball's trajectory, creating the proper alignment for a successful jump shot."
+    ],
+    "scenario_text": "A basketball player is struggling with their technique.",
+    "is_ge": false,
+    "videoUrl": "videos/placeholder_basketball_52.mp4"
   }
-] 
+]

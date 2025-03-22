@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JSON Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        pre { background: #f5f5f5; padding: 10px; border: 1px solid #ddd; max-height: 300px; overflow: auto; }
+        .result { margin-top: 20px; }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        button { padding: 10px; margin: 10px 0; background: #4a90e2; color: white; border: none; cursor: pointer; }
+        button:hover { background: #357ae8; }
+    </style>
+</head>
+<body>
+    <h1>JSON Loading Test</h1>
+    <p>This page is used to test if questionnaire_data.json can be correctly loaded and parsed.</p>
+    
+    <div class="result">
+        <h2>Loading Status</h2>
+        <div id="status">Loading data...</div>
+    </div>
+    
+    <div class="result">
+        <h2>Data Summary</h2>
+        <div id="summary"></div>
+    </div>
+    
+    <div class="result">
+        <h2>Raw JSON Data Snippet</h2>
+        <pre id="raw-json"></pre>
+        <button id="view-more-raw">View More Raw Data</button>
+    </div>
+    
+    <div class="result">
+        <h2>First Entry</h2>
+        <pre id="first-item"></pre>
+    </div>
+    
+    <div class="result">
+        <h2>negative_comments Type Check</h2>
+        <pre id="type-check"></pre>
+    </div>
+    
+    <div class="result">
+        <h2>All Entries Check</h2>
+        <button id="check-all">Check negative_comments for All Entries</button>
+        <pre id="all-items-check"></pre>
+    </div>
+    
+    <script>
+        // Load JSON data
+        let jsonRawText = '';
+        let jsonData = null;
+        
+        fetch('questionnaire_data.json')
+            .then(response => {
+                document.getElementById('status').textContent = `Response status: ${response.status}`;
+                return response.text(); // Get raw text first
+            })
+            .then(text => {
+                jsonRawText = text;
+                document.getElementById('raw-json').textContent = text.substring(0, 500) + '...';
+                
+                try {
+                    // Manually parse JSON
+                    jsonData = JSON.parse(text);
+                    document.getElementById('status').innerHTML = '<span class="success">JSON parsed successfully!</span>';
+                    processData(jsonData);
+                    return jsonData;
+                } catch (e) {
+                    document.getElementById('status').innerHTML = `<span class="error">JSON parsing error: ${e.message}</span>`;
+                    throw e;
+                }
+            })
+            .catch(error => {
+                document.getElementById('status').innerHTML = `
+                    <p class="error">Loading error!</p>
+                    <p>Error message: ${error.message}</p>
+                `;
+            });
+            
+        function processData(data) {
+            // Display data summary
+            const summary = document.getElementById('summary');
+            summary.innerHTML = `
+                <p><span class="success">Data loaded successfully!</span></p>
+                <p>Total entries: ${data.length}</p>
+                <p>First entry ID: ${data[0].id}</p>
+                <p>Data type: ${Object.prototype.toString.call(data)}</p>
+            `;
+            
+            // Display first entry
+            const firstItemElement = document.getElementById('first-item');
+            firstItemElement.textContent = JSON.stringify(data[0], null, 2);
+            
+            // Check type of negative_comments
+            const typeCheckElement = document.getElementById('type-check');
+            let typeCheckResults = [];
+            
+            data.forEach((item, index) => {
+                if (index < 5) { // Only check first 5 entries
+                    const hasNegComments = 'negative_comments' in item;
+                    const negCommType = hasNegComments ? typeof item.negative_comments : 'undefined';
+                    const isArray = hasNegComments ? Array.isArray(item.negative_comments) : false;
+                    const length = hasNegComments && isArray ? item.negative_comments.length : 0;
+                    
+                    let firstComment = "None";
+                    if (hasNegComments && isArray && length > 0) {
+                        firstComment = typeof item.negative_comments[0] === 'string' ? 
+                            item.negative_comments[0].substring(0, 50) + '...' : 
+                            JSON.stringify(item.negative_comments[0]);
+                    }
+                    
+                    typeCheckResults.push(`
+Entry ${index} (${item.id}):
+- Has negative_comments: ${hasNegComments}
+- negative_comments type: ${negCommType}
+- Is array: ${isArray}
+- Array length: ${length}
+- First comment: ${firstComment}
+                    `);
+                }
+            });
+            
+            typeCheckElement.textContent = typeCheckResults.join('\n');
+            
+            // Add event for viewing more raw data
+            document.getElementById('view-more-raw').addEventListener('click', function() {
+                document.getElementById('raw-json').textContent = jsonRawText;
+            });
+            
+            // Add event for checking all entries
+            document.getElementById('check-all').addEventListener('click', function() {
+                checkAllItems(data);
+            });
+        }
+        
+        function checkAllItems(data) {
+            const resultsElement = document.getElementById('all-items-check');
+            resultsElement.textContent = 'Checking...';
+            
+            let results = [];
+            let problemCount = 0;
+            
+            data.forEach((item, index) => {
+                let hasIssue = false;
+                let message = `Entry ${index} (${item.id}): `;
+                
+                if (!item.groundTruth) {
+                    message += "Missing groundTruth; ";
+                    hasIssue = true;
+                }
+                
+                if (!item.negative_comments) {
+                    message += "Missing negative_comments; ";
+                    hasIssue = true;
+                } else if (!Array.isArray(item.negative_comments)) {
+                    message += `negative_comments is not an array (${typeof item.negative_comments}); `;
+                    hasIssue = true;
+                } else if (item.negative_comments.length === 0) {
+                    message += "negative_comments is an empty array; ";
+                    hasIssue = true;
+                } else {
+                    // Check if each negative_comment is a string
+                    const nonStringComments = item.negative_comments.filter(c => typeof c !== 'string');
+                    if (nonStringComments.length > 0) {
+                        message += `${nonStringComments.length} negative_comments are not strings; `;
+                        hasIssue = true;
+                    }
+                }
+                
+                if (hasIssue) {
+                    problemCount++;
+                    results.push(message);
+                }
+                
+                if (index % 10 === 0) {
+                    // Update progress
+                    resultsElement.textContent = `Checking... ${index + 1}/${data.length}\n\n${results.join('\n')}`;
+                }
+            });
+            
+            if (problemCount === 0) {
+                resultsElement.textContent = "Check complete! No issues found.";
+            } else {
+                resultsElement.textContent = `Check complete! Found ${problemCount} problem entries:\n\n${results.join('\n')}`;
+            }
+        }
+    </script>
+</body>
+</html> 

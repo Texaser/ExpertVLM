@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Technique Evaluation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script>
+        // 清除所有localStorage数据，防止页面加载时使用旧数据
+        localStorage.clear();
+        console.log("localStorage cleared on video questionnaire page load");
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        .instructions {
+            margin-bottom: 30px;
+        }
+        .video-container {
+            width: 100%;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+        video {
+            width: 100%;
+            display: block;
+            background-color: #000;
+        }
+        .option-card {
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .option-card:hover {
+            border-color: #aaa;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .option-card.selected {
+            background-color: #e7f0fd;
+            border-color: #4a6baf;
+            border-left: 4px solid #4a6baf;
+        }
+        .check-icon {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            color: #4a6baf;
+            display: none;
+        }
+        .option-card.selected .check-icon {
+            display: inline-block;
+        }
+        .comment-card {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+            margin-bottom: 40px;
+        }
+        #submission-form {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 40px;
+        }
+        .progress {
+            height: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="header">
+            <h1>Video Technique Evaluation</h1>
+            <p class="lead">Please review each video and select the most appropriate option</p>
+        </div>
+        
+        <div class="alert alert-info instructions">
+            <p>Please follow these steps:</p>
+            <ol>
+                <li>Watch each video carefully</li>
+                <li>Read each feedback option carefully and select the one you feel is most accurate</li>
+                <li>Add any additional comments in the text area provided</li>
+                <li>Submit your responses when you've completed all videos</li>
+            </ol>
+        </div>
+
+        <div class="progress mb-4">
+            <div class="progress-bar bg-primary" role="progressbar" id="progress-bar" style="width: 0%"></div>
+        </div>
+
+        <div id="video-container">
+            <!-- Videos will be inserted here by JavaScript -->
+        </div>
+
+        <div class="navigation-buttons">
+            <button type="button" id="prev-btn" class="btn btn-secondary" disabled>Previous</button>
+            <button type="button" id="next-btn" class="btn btn-primary">Next</button>
+        </div>
+
+        <div id="submission-form" style="display: none;">
+            <h3>Submit Your Evaluation</h3>
+            <div class="mb-3">
+                <label for="evaluator-name" class="form-label">Your Name</label>
+                <input type="text" class="form-control" id="evaluator-name" placeholder="Enter your name">
+            </div>
+            <div class="mb-3">
+                <label for="evaluator-email" class="form-label">Your Email</label>
+                <input type="email" class="form-control" id="evaluator-email" placeholder="Enter your email">
+            </div>
+            <div class="mb-3">
+                <label for="additional-comments" class="form-label">Additional Comments (Optional)</label>
+                <textarea class="form-control" id="additional-comments" rows="4" placeholder="Any overall comments about the videos or evaluation process"></textarea>
+            </div>
+            <button type="button" id="submit-all-btn" class="btn btn-success">Submit Evaluation</button>
+        </div>
+
+        <div id="submission-success" class="alert alert-success mt-4" style="display: none;">
+            <h4><i class="bi bi-check-circle-fill"></i> Thank you for your evaluation!</h4>
+            <p>Your responses have been recorded successfully.</p>
+        </div>
+    </div>
+
+    <script src="questionnaire.js"></script>
+</body>
+</html> 

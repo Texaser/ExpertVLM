@@ -1,96 +1,96 @@
-# FormSpree表单设置说明
+# FormSpree Setup Guide
 
-本文档介绍如何设置[FormSpree](https://formspree.io/)来处理人体研究问卷的表单提交。
+This document explains how to set up [FormSpree](https://formspree.io/) to handle form submissions for the human study questionnaire.
 
-## 什么是FormSpree？
+## What is FormSpree?
 
-FormSpree是一个简单的表单处理服务，允许静态网站（如GitHub Pages）处理表单提交而无需编写后端代码。它提供免费和付费计划。
+FormSpree is a simple form processing service that allows static websites (such as GitHub Pages) to handle form submissions without writing backend code. It offers both free and paid plans.
 
-## 设置步骤
+## Setup Steps
 
-### 1. 创建FormSpree账户
+### 1. Create a FormSpree Account
 
-1. 访问[formspree.io](https://formspree.io/)
-2. 点击"Sign Up"创建一个新账户（可以使用GitHub账户登录）
-3. 验证您的电子邮件地址
+1. Visit [formspree.io](https://formspree.io/)
+2. Click "Sign Up" to create a new account (you can sign in with your GitHub account)
+3. Verify your email address
 
-### 2. 创建新表单
+### 2. Create a New Form
 
-1. 登录FormSpree账户
-2. 点击"New Form"按钮
-3. 填写表单名称（例如："Human Study Questionnaire"）
-4. 选择表单类型（可选）
-5. 点击"Create Form"
+1. Log in to your FormSpree account
+2. Click the "New Form" button
+3. Fill in the form name (e.g., "Human Study Questionnaire")
+4. Select the form type (optional)
+5. Click "Create Form"
 
-### 3. 获取表单ID
+### 3. Get Your Form ID
 
-创建表单后，您将获得一个表单ID。它看起来像这样：`xrgkpzlq`（示例）。
+After creating the form, you'll receive a form ID. It looks something like this: `xrgkpzlq` (example).
 
-### 4. 更新questionnaire.js文件
+### 4. Update the questionnaire.js File
 
-1. 打开`questionnaire.js`文件
-2. 找到以下行：
+1. Open the `questionnaire.js` file
+2. Find the following line:
    ```javascript
    const formSpreeEndpoint = 'https://formspree.io/f/YOUR_FORM_ID';
    ```
-3. 将`YOUR_FORM_ID`替换为您的实际FormSpree表单ID
+3. Replace `YOUR_FORM_ID` with your actual FormSpree form ID
 
-### 5. 测试表单提交
+### 5. Test Form Submission
 
-1. 部署更新后的网站（推送到GitHub）
-2. 填写并提交问卷
-3. 检查FormSpree仪表板，确认是否收到提交
-4. 您还会收到一封电子邮件通知（基于FormSpree设置）
+1. Deploy the updated website (push to GitHub)
+2. Fill out and submit the questionnaire
+3. Check the FormSpree dashboard to confirm receipt of the submission
+4. You will also receive an email notification (based on FormSpree settings)
 
-## 表单提交数据结构
+## Form Submission Data Structure
 
-每次提交的数据格式如下：
+The data format for each submission is as follows:
 
 ```javascript
 {
   "evaluator": {
-    "name": "用户姓名",
-    "email": "用户邮箱",
-    "additionalComments": "其他评论"
+    "name": "User Name",
+    "email": "User Email",
+    "additionalComments": "Additional Comments"
   },
   "responses": [
     {
-      "videoId": "视频ID",
-      "selectedOption": 选择的选项索引,
-      "comments": "用户对该视频的评论"
+      "videoId": "Video ID",
+      "selectedOption": Selected Option Index,
+      "comments": "User comments for this video"
     },
-    // 更多视频响应...
+    // More video responses...
   ],
-  "submittedAt": "ISO格式的时间戳"
+  "submittedAt": "ISO format timestamp"
 }
 ```
 
-## 查看提交数据
+## View Submission Data
 
-1. 登录FormSpree
-2. 找到您的表单
-3. 查看"Submissions"选项卡
-4. 您可以查看所有提交的详细信息
-5. 可以将数据导出为CSV或通过FormSpree API访问
+1. Log in to FormSpree
+2. Find your form
+3. View the "Submissions" tab
+4. You can view details of all submissions
+5. Data can be exported as CSV or accessed via the FormSpree API
 
-## 高级设置（可选）
+## Advanced Settings (Optional)
 
-FormSpree提供更多高级功能：
+FormSpree offers more advanced features:
 
-- 表单验证规则
-- 垃圾邮件保护
-- 重定向URL自定义
-- 电子邮件通知自定义
-- Webhooks集成
-- 等等
+- Form validation rules
+- Spam protection
+- Custom redirect URLs
+- Custom email notifications
+- Webhooks integration
+- And more
 
-查看[FormSpree文档](https://help.formspree.io/)了解更多信息。
+See the [FormSpree documentation](https://help.formspree.io/) for more information.
 
-## 故障排除
+## Troubleshooting
 
-如果表单提交不工作：
+If form submissions aren't working:
 
-1. 检查浏览器控制台是否有错误
-2. 确认FormSpree ID正确
-3. 确保网站没有CORS或CSP限制
-4. 免费计划有提交数量限制，检查是否超出限制 
+1. Check the browser console for errors
+2. Confirm the FormSpree ID is correct
+3. Ensure the website doesn't have CORS or CSP restrictions
+4. Free plans have submission limits; check if you've exceeded the limit 

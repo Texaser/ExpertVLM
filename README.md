@@ -1,6 +1,86 @@
-# Expert Video Evaluation Questionnaire
+# Guitar Technique Evaluation Questionnaire
 
-This is a GitHub Pages website for conducting video technique evaluations in a questionnaire format. Users can watch videos, compare different technique descriptions, and provide feedback.
+This is a questionnaire website for guitar technique evaluation, supporting both video and text assessment modes.
+
+## Features
+
+- **Two evaluation modes**: 
+  - **Video mode**: Watch video content and select the most accurate feedback option
+  - **Text mode**: Read scenario descriptions and select the correct feedback from mixed options
+
+- **Progress saving**: Users can pause and continue the evaluation later, with progress automatically saved in the browser
+- **Feedback system**: Text mode immediately shows whether selections are correct
+- **Score calculation**: Text mode calculates and displays the total score upon completion
+- **Form submission**: Integrated with FormSpree form submission functionality
+- **Responsive design**: User-friendly interface for desktop and mobile devices
+
+## Usage Steps
+
+1. Open the website homepage and select an evaluation mode (video or text)
+2. Follow the instructions to complete each question
+3. Fill in your information on the final submission page
+4. Click the submit button to send the results
+
+## Technical Implementation
+
+- Pure frontend implementation, no backend server required
+- Built with HTML, CSS, and JavaScript
+- Uses Bootstrap 5 framework for styling
+- Uses FormSpree for form submission processing
+- Uses LocalStorage for saving progress locally
+
+## Local Deployment
+
+To run this website locally, you can use Python's built-in HTTP server:
+
+```bash
+cd /path/to/project
+python -m http.server 8000
+```
+
+Then access the site in your browser at http://localhost:8000
+
+## Deployment
+
+This website can be deployed to any static website hosting service, such as GitHub Pages, Netlify, or Vercel.
+
+## File Structure
+
+- `index.html` - Main page
+- `video_questionnaire.html` - Video version questionnaire page
+- `text_questionnaire.html` - Text version questionnaire page
+- `questionnaire.js` - JavaScript code for the video questionnaire
+- `text_questionnaire.js` - JavaScript code for the text questionnaire
+- `questionnaire_data.json` - Questionnaire data
+- `videos/` - Directory for video files
+- `FORMSPREE_SETUP.md` - FormSpree integration guide
+
+## Data Format
+
+questionnaire_data.json file format:
+
+```json
+[
+  {
+    "id": "unique_id",
+    "videoUrl": "videos/example.mp4",
+    "groundTruth": "This is the correct feedback content...",
+    "negative_comments": [
+      "Incorrect option 1...",
+      "Incorrect option 2...",
+      "Incorrect option 3...",
+      "Incorrect option 4..."
+    ]
+  },
+  ...
+]
+```
+
+In the questionnaire, the groundTruth and negative_comments will be combined and shuffled to create the options shown to users. The system tracks which option is the correct groundTruth and provides feedback accordingly in the text mode.
+
+## Form Submission
+
+Form submission uses the FormSpree service. For detailed setup, refer to the `FORMSPREE_SETUP.md` file.
 
 ## Demo
 
