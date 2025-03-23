@@ -5,7 +5,98 @@ document.addEventListener('DOMContentLoaded', function() {
     let responses = [];
     let correctAnswers = {};
     
+    // Settings for balanced question selection
+    const samplesPerType = 2;  // Number of samples per domain and type (GE/tips)
+    const userSessionId = generateUserSessionId();  // Generate a unique session ID for this user
+    
     console.log("Script loaded, starting data loading...");
+    console.log("User session ID:", userSessionId);
+
+    // Generate a unique session ID for this user
+    function generateUserSessionId() {
+        // Use a combination of timestamp and random number
+        const timestamp = new Date().getTime();
+        const randomPart = Math.floor(Math.random() * 1000000);
+        return `${timestamp}-${randomPart}`;
+    }
+    
+    // Select balanced questions from the full dataset
+    function selectBalancedQuestions(allQuestions, samplesPerType) {
+        // Use the session ID as part of the random seed
+        const seed = parseInt(userSessionId.split('-')[0]) % 10000;
+        const seededRandom = new Math.seedrandom(seed.toString());
+        
+        // Group questions by domain and type (GE/tips)
+        const groupedQuestions = {};
+        
+        allQuestions.forEach(question => {
+            const domain = question.domain || question.id.split('_')[0];
+            const type = question.is_ge ? 'ge' : 'tips';
+            const key = `${domain}_${type}`;
+            
+            if (!groupedQuestions[key]) {
+                groupedQuestions[key] = [];
+            }
+            
+            groupedQuestions[key].push(question);
+        });
+        
+        console.log("Grouped questions by domain and type:", Object.keys(groupedQuestions));
+        
+        // Find unique domains
+        const domains = [...new Set(Object.keys(groupedQuestions).map(key => key.split('_')[0]))];
+        console.log("Available domains:", domains);
+        
+        // Select questions for each domain and type
+        const selectedQuestions = [];
+        
+        domains.forEach(domain => {
+            const geKey = `${domain}_ge`;
+            const tipsKey = `${domain}_tips`;
+            
+            // Select good execution samples if available
+            if (groupedQuestions[geKey] && groupedQuestions[geKey].length >= samplesPerType) {
+                // Shuffle the array
+                shuffleArrayWithSeed(groupedQuestions[geKey], seededRandom);
+                // Take first N samples
+                selectedQuestions.push(...groupedQuestions[geKey].slice(0, samplesPerType));
+                console.log(`Selected ${samplesPerType} GE samples from ${domain}`);
+            } else if (groupedQuestions[geKey]) {
+                console.log(`Not enough GE samples for ${domain}, using all ${groupedQuestions[geKey].length} available`);
+                selectedQuestions.push(...groupedQuestions[geKey]);
+            } else {
+                console.log(`No GE samples available for ${domain}`);
+            }
+            
+            // Select tips for improvement samples if available
+            if (groupedQuestions[tipsKey] && groupedQuestions[tipsKey].length >= samplesPerType) {
+                // Shuffle the array
+                shuffleArrayWithSeed(groupedQuestions[tipsKey], seededRandom);
+                // Take first N samples
+                selectedQuestions.push(...groupedQuestions[tipsKey].slice(0, samplesPerType));
+                console.log(`Selected ${samplesPerType} tips samples from ${domain}`);
+            } else if (groupedQuestions[tipsKey]) {
+                console.log(`Not enough tips samples for ${domain}, using all ${groupedQuestions[tipsKey].length} available`);
+                selectedQuestions.push(...groupedQuestions[tipsKey]);
+            } else {
+                console.log(`No tips samples available for ${domain}`);
+            }
+        });
+        
+        // Final shuffle to mix up the questions
+        shuffleArrayWithSeed(selectedQuestions, seededRandom);
+        
+        return selectedQuestions;
+    }
+    
+    // Fisher-Yates shuffle with seeded random
+    function shuffleArrayWithSeed(array, seededRandom) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(seededRandom() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
 
     // Directly check if the JSON file exists
     fetch('questionnaire_data.json')
@@ -19,36 +110,41 @@ document.addEventListener('DOMContentLoaded', function() {
             
             try {
                 // Manually parse JSON
-                const data = JSON.parse(text);
-                return data;
+                const allData = JSON.parse(text);
+                return allData;
             } catch (e) {
                 console.error("JSON parsing error:", e);
                 throw new Error("JSON parsing failed: " + e.message);
             }
         })
-        .then(data => {
+        .then(allData => {
             console.log("Successfully parsed JSON data");
-            console.log("Number of data items:", data.length);
-            console.log("Data type:", Object.prototype.toString.call(data));
+            console.log("Total available questions:", allData.length);
             
-            if (data.length > 0) {
-                console.log("First item data:", data[0]);
+            // Select balanced questions for this user session
+            const selectedData = selectBalancedQuestions(allData, samplesPerType);
+            console.log(`Selected ${selectedData.length} questions for this session`);
+            
+            // Log the distribution of selected questions
+            const distribution = {};
+            selectedData.forEach(item => {
+                const domain = item.domain || item.id.split('_')[0];
+                const type = item.is_ge ? 'ge' : 'tips';
+                const key = `${domain}_${type}`;
                 
-                if (data[0].negative_comments) {
-                    console.log("First item negative_comments type:", 
-                                Object.prototype.toString.call(data[0].negative_comments));
-                    console.log("First item negative_comments length:", 
-                                Array.isArray(data[0].negative_comments) ? data[0].negative_comments.length : "not an array");
-                    
-                    if (Array.isArray(data[0].negative_comments) && data[0].negative_comments.length > 0) {
-                        console.log("First item's first negative comment:", data[0].negative_comments[0]);
-                    }
-                } else {
-                    console.error("First item is missing negative_comments field");
+                if (!distribution[key]) {
+                    distribution[key] = 0;
                 }
+                
+                distribution[key]++;
+            });
+            console.log("Distribution of selected questions:", distribution);
+            
+            if (selectedData.length > 0) {
+                console.log("First selected item:", selectedData[0]);
             }
             
-            questionnaireData = data;
+            questionnaireData = selectedData;
             console.log("Data loading complete, processing options...");
             prepareOptions();
             console.log("Options processing complete, initializing responses...");
@@ -194,7 +290,9 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedOption: null,
             isCorrect: false,
             feedbackShown: false,  // New field to mark if feedback has been shown
-            comments: ''
+            comments: '',
+            validations: item.options ? new Array(item.options.length).fill(null) : [],  // Track validation for each option
+            cannotTell: false  // Track if user selected "Cannot tell"
         }));
         
         console.log("Created", responses.length, "response objects");
@@ -208,6 +306,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 questionnaireData.forEach((item, index) => {
                     const savedResponse = parsedResponses.find(r => r.questionId === item.id);
                     if (savedResponse) {
+                        // Ensure validations array exists and has the right length
+                        if (!savedResponse.validations || savedResponse.validations.length !== item.options.length) {
+                            savedResponse.validations = new Array(item.options.length).fill(null);
+                        }
+                        // Ensure cannotTell property exists
+                        if (savedResponse.cannotTell === undefined) {
+                            savedResponse.cannotTell = false;
+                        }
                         responses[index] = savedResponse;
                     }
                 });
@@ -297,8 +403,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get the feedback type based on is_ge flag
         let feedbackType = item.is_ge ? "good execution" : "tips for improvement";
         
-        // Create the instruction text
-        let instructionText = `Here are some expert feedback options (${feedbackType}). Which one best describes this performance?`;
+        // Create the instruction text with LLM validation explanation
+        let instructionText = `Here are some expert feedback options (${feedbackType}). Some options are generated by AI and may not be appropriate. Please:
+        1. Select the option that <strong>best describes this performance</strong> OR check "<strong>Cannot tell which option is correct</strong>" below
+        2. For <strong>EACH option</strong>, mark it as either <strong>Valid</strong> or <strong>Invalid</strong> based on whether it makes sense in this context
+        
+        You must complete <strong>both steps</strong> before submitting.`;
         
         const questionContainer = document.getElementById('question-container');
         
@@ -310,13 +420,43 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Create HTML for options
-        const optionsHtml = item.options.map((option, idx) => `
-            <div class="option-card ${responses[currentIndex].selectedOption === idx ? 'selected' : ''}" data-option="${idx}">
-                <i class="bi bi-check-circle-fill check-icon"></i>
-                ${option}
+        // Create HTML for options with validation controls
+        const optionsHtml = item.options.map((option, idx) => {
+            const validClass = responses[currentIndex].validations[idx] === true ? 'valid-option' : 
+                             (responses[currentIndex].validations[idx] === false ? 'invalid-option' : '');
+            
+            return `
+                <div class="option-card ${responses[currentIndex].selectedOption === idx ? 'selected' : ''} ${validClass}" data-option="${idx}">
+                    <div class="option-content option-clickable">
+                        <i class="bi bi-check-circle-fill check-icon"></i>
+                        <div class="option-text">${option}</div>
+                    </div>
+                    <div class="validation-controls">
+                        <label class="validation-label">
+                            <input type="radio" name="validation-${currentIndex}-${idx}" value="valid" 
+                                ${responses[currentIndex].validations[idx] === true ? 'checked' : ''}>
+                            Valid
+                        </label>
+                        <label class="validation-label">
+                            <input type="radio" name="validation-${currentIndex}-${idx}" value="invalid"
+                                ${responses[currentIndex].validations[idx] === false ? 'checked' : ''}>
+                            Invalid
+                        </label>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add "Cannot tell" option
+        const cannotTellHtml = `
+            <div class="cannot-tell-option ${responses[currentIndex].cannotTell ? 'selected' : ''}">
+                <label>
+                    <input type="checkbox" id="cannot-tell-${currentIndex}" 
+                        ${responses[currentIndex].cannotTell ? 'checked' : ''}>
+                    <span>Cannot tell which option is correct</span>
+                </label>
             </div>
-        `).join('');
+        `;
 
         // Feedback message element - hidden initially
         const feedbackHtml = `
@@ -346,6 +486,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${optionsHtml}
                     </div>
                     
+                    ${cannotTellHtml}
+                    
                     ${submitButtonHtml}
                     ${feedbackHtml}
                     
@@ -360,13 +502,58 @@ document.addEventListener('DOMContentLoaded', function() {
         
         questionContainer.innerHTML = questionHtml;
         
-        // Add event listeners to option cards
+        // Add event listeners to option cards and their content
         document.querySelectorAll('.option-card').forEach(card => {
-            card.addEventListener('click', function() {
+            card.addEventListener('click', function(e) {
+                // Don't trigger option selection if clicking on validation controls
+                if (e.target.closest('.validation-controls')) {
+                    return;
+                }
+                
                 const optionIndex = parseInt(this.getAttribute('data-option'));
                 selectOption(optionIndex);
             });
         });
+        
+        // Make option-content also clickable
+        document.querySelectorAll('.option-clickable').forEach(content => {
+            content.addEventListener('click', function(e) {
+                const card = this.closest('.option-card');
+                if (card) {
+                    const optionIndex = parseInt(card.getAttribute('data-option'));
+                    selectOption(optionIndex);
+                }
+            });
+        });
+        
+        // Add event listeners for validation radios
+        document.querySelectorAll('.validation-controls input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const [_, questionIdx, optionIdx] = this.name.split('-');
+                const value = this.value === 'valid';
+                updateValidation(parseInt(optionIdx), value);
+            });
+        });
+        
+        // Add event listener for "Cannot tell" checkbox
+        const cannotTellCheckbox = document.getElementById(`cannot-tell-${currentIndex}`);
+        if (cannotTellCheckbox) {
+            cannotTellCheckbox.addEventListener('change', function() {
+                responses[currentIndex].cannotTell = this.checked;
+                
+                // If "Cannot tell" is selected, deselect any chosen option
+                if (this.checked && responses[currentIndex].selectedOption !== null) {
+                    responses[currentIndex].selectedOption = null;
+                    document.querySelectorAll('.option-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                }
+                
+                // Update UI
+                document.querySelector('.cannot-tell-option').classList.toggle('selected', this.checked);
+                saveResponses();
+            });
+        }
         
         // Add event listener for the submit button
         document.getElementById('submit-answer-btn').addEventListener('click', function() {
@@ -409,12 +596,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Submit answer and show feedback
     function submitAnswer() {
-        if (responses[currentIndex].selectedOption === null) {
-            alert('Please select an option first');
+        // Check if all options have been validated
+        const allOptionsValidated = responses[currentIndex].validations.every(validation => validation === true || validation === false);
+        
+        if (!allOptionsValidated) {
+            alert('Please mark every option as either Valid or Invalid before submitting.');
+            return;
+        }
+        
+        // Check if user either selected an option or marked "Cannot tell"
+        if (responses[currentIndex].selectedOption === null && !responses[currentIndex].cannotTell) {
+            alert('Please select an option or check "Cannot tell which option is correct"');
             return;
         }
 
-        // Determine if correct
+        // If "Cannot tell" is checked, we don't evaluate correctness
+        if (responses[currentIndex].cannotTell) {
+            responses[currentIndex].isCorrect = null; // Not applicable
+            responses[currentIndex].feedbackShown = true;
+            
+            // Disable submit button
+            document.getElementById('submit-answer-btn').disabled = true;
+            document.getElementById('submit-answer-btn').textContent = 'Submitted';
+            
+            // Save responses and return without showing feedback
+            saveResponses();
+            return;
+        }
+
+        // Determine if correct for normal selections
         const correctIndex = correctAnswers[questionnaireData[currentIndex].id];
         const isCorrect = (responses[currentIndex].selectedOption === correctIndex);
         
@@ -457,6 +667,19 @@ document.addEventListener('DOMContentLoaded', function() {
         feedbackEl.innerHTML = isCorrect ? 
             '<strong>Correct!</strong> You selected the most appropriate feedback option.' : 
             `<strong>Incorrect.</strong> The more appropriate option is #${correctIndex + 1}.`;
+    }
+
+    // Update validation for an option
+    function updateValidation(optionIndex, isValid) {
+        responses[currentIndex].validations[optionIndex] = isValid;
+        
+        // Update UI
+        const optionCard = document.querySelector(`.option-card[data-option="${optionIndex}"]`);
+        optionCard.classList.remove('valid-option', 'invalid-option');
+        optionCard.classList.add(isValid ? 'valid-option' : 'invalid-option');
+        
+        // Save responses
+        saveResponses();
     }
 
     // Save responses to localStorage

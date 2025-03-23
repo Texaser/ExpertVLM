@@ -3,13 +3,18 @@
 import json
 import os
 import random
+import argparse
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Generate a large pool of questionnaire data')
+    parser.add_argument('--output_file', type=str, default='all_questionnaire_data.json',
+                        help='Output file for all samples (default: all_questionnaire_data.json)')
+    parser.add_argument('--min_options', type=int, default=3,
+                        help='Minimum number of negative options required for a valid sample (default: 3)')
+    return parser.parse_args()
 
 # Path to matched_results directory
 matched_results_dir = '/mnt/bum/hanyi/repo/Qwen/matched_results'
-
-# New questionnaire data
-new_data = []
-sample_id = 1
 
 # Define scenario text for each domain and type (tips/ge)
 def get_scenario_text(domain, is_ge):
@@ -82,71 +87,108 @@ def get_scenario_text(domain, is_ge):
         # Default if domain not found
         return ge_text if is_ge else tips_text
 
-
-# Get all *_enriched.json files
-json_files = [f for f in os.listdir(matched_results_dir) if f.endswith('_enriched.json')]
-
-# Process each file
-for file_name in json_files:
-    file_path = os.path.join(matched_results_dir, file_name)
+def collect_all_samples(min_options=3):
+    """Collect all valid samples from all enriched JSON files"""
+    all_samples = []
+    sample_id = 1
+    domain_counts = {}
     
-    # Skip very large files that might cause memory issues
-    file_size = os.path.getsize(file_path) / (1024 * 1024)  # Size in MB
+    # Get all *_enriched.json files
+    json_files = [f for f in os.listdir(matched_results_dir) if f.endswith('_enriched.json')]
     
-    # Extract domain from filename
-    domain = file_name.split('_')[0]
-    
-    # Check if it's a "ge" or "tips" file
-    is_ge = "_ge_" in file_name
-    
-    # Get appropriate scenario text
-    scenario_text = get_scenario_text(domain, is_ge)
-    
-    try:
-        with open(file_path, 'r') as f:
-            data = json.load(f)
+    for file_name in json_files:
+        file_path = os.path.join(matched_results_dir, file_name)
         
-        # Get samples
-        samples = data.get('enriched_samples', [])
+        # Extract domain from filename
+        domain = file_name.split('_')[0]
+        is_ge = "_ge_" in file_name
         
-        if not samples:
-            print(f'No samples found in {file_name}')
-            continue
+        # Track domain counts
+        domain_key = f"{domain}_{'ge' if is_ge else 'tips'}"
+        if domain_key not in domain_counts:
+            domain_counts[domain_key] = 0
         
-        # Limit to maximum 3 samples
-        selected_samples = random.sample(samples, min(2, len(samples)))
+        # Get appropriate scenario text
+        scenario_text = get_scenario_text(domain, is_ge)
         
-        for sample in selected_samples:
-            # Check if the required fields exist
-            if 'GT' not in sample or 'negative_comments' not in sample:
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            
+            # Get samples
+            samples = data.get('enriched_samples', [])
+            
+            if not samples:
+                print(f'No samples found in {file_name}')
                 continue
+            
+            # Process each sample
+            for sample in samples:
+                # Check if the required fields exist
+                if 'GT' not in sample or 'negative_comments' not in sample:
+                    continue
                 
-            # Create the new sample in the format required for questionnaire_data.json
-            new_sample = {
-                'id': f'{domain}_{sample_id}',
-                'groundTruth': sample['GT'],
-                'negative_comments': sample['negative_comments'],
-                'scenario_text': scenario_text,
-                'is_ge': is_ge
-            }
-            
-            # Add video URL if it exists
-            if 'take_name' in sample and 'recording' in sample:
-                video_name = f"{sample['take_name']}_{sample['recording']}"
-                # Just reference a placeholder URL for now
-                new_sample['videoUrl'] = f"videos/placeholder_{domain}_{sample_id}.mp4"
-            else:
-                # Use a placeholder for videos
-                new_sample['videoUrl'] = f"videos/placeholder_{domain}_{sample_id}.mp4"
-            
-            new_data.append(new_sample)
-            sample_id += 1
+                # Ensure negative_comments is a list with enough options
+                if not isinstance(sample['negative_comments'], list) or len(sample['negative_comments']) < min_options:
+                    continue
+                
+                # Create the new sample in the format required for questionnaire_data.json
+                new_sample = {
+                    'id': f'{domain}_{sample_id}',
+                    'groundTruth': sample['GT'],
+                    'negative_comments': sample['negative_comments'],
+                    'scenario_text': scenario_text,
+                    'is_ge': is_ge,
+                    'domain': domain,
+                    'domain_type': domain_key
+                }
+                
+                # Add video URL if it exists
+                if 'take_name' in sample and 'recording' in sample:
+                    video_name = f"{sample['take_name']}_{sample['recording']}"
+                    # Just reference a placeholder URL for now
+                    new_sample['videoUrl'] = f"videos/{video_name}.mp4"
+                else:
+                    # Use a placeholder for videos
+                    new_sample['videoUrl'] = f"videos/placeholder_{domain}_{sample_id}.mp4"
+                
+                all_samples.append(new_sample)
+                domain_counts[domain_key] += 1
+                sample_id += 1
+        
+        except Exception as e:
+            print(f'Error processing {file_name}: {str(e)}')
     
-    except Exception as e:
-        print(f'Error processing {file_name}: {str(e)}')
+    return all_samples, domain_counts
 
-# Save the new questionnaire_data.json
-with open('questionnaire_data.json', 'w') as f:
-    json.dump(new_data, f, indent=2)
+def main():
+    args = parse_args()
+    
+    print(f"Collecting samples from {matched_results_dir}...")
+    all_samples, domain_counts = collect_all_samples(min_options=args.min_options)
+    
+    # Print statistics about collected samples
+    print("\nSample statistics:")
+    print(f"Total valid samples: {len(all_samples)}")
+    print("Samples per domain:")
+    for domain_key, count in sorted(domain_counts.items()):
+        print(f"  {domain_key}: {count} samples")
+    
+    # Save all samples
+    with open(args.output_file, 'w') as f:
+        json.dump(all_samples, f, indent=2)
+    
+    print(f"\nSaved {len(all_samples)} samples to {args.output_file}")
+    
+    # Also create a copy as questionnaire_data.json for the frontend
+    with open('questionnaire_data.json', 'w') as f:
+        json.dump(all_samples, f, indent=2)
+    
+    print(f"Also copied to questionnaire_data.json")
+    
+    print("\nNext steps:")
+    print("1. Update text_questionnaire.js to randomly select N questions from the pool for each user")
+    print("2. Add a mechanism to ensure different users see different questions")
 
-print(f'Created questionnaire_data.json with {len(new_data)} samples') 
+if __name__ == '__main__':
+    main() 

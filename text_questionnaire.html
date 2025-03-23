@@ -6,6 +6,7 @@
     <title>Expert Commentary Evaluation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
     <script>
         // Clear all localStorage data to prevent using old data when page loads
         localStorage.clear();
@@ -31,9 +32,72 @@
             border: 1px solid #ddd;
             border-radius: 6px;
             padding: 15px;
+            margin-bottom: 12px;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
             position: relative;
-            background-color: #fff;
+        }
+        .option-card:hover .option-content {
+            background-color: #f8f9fa;  /* Light gray background on hover */
+        }
+        .option-content {
+            display: flex;
+            align-items: flex-start;
             margin-bottom: 10px;
+            padding-bottom: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .option-card.selected .option-content {
+            background-color: #e7f0fd;  /* Light blue for selected option */
+        }
+        .option-clickable {
+            cursor: pointer;
+            flex: 1;
+        }
+        .option-text {
+            flex: 1;
+        }
+        .validation-controls {
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+            gap: 15px;
+            margin-top: auto;
+        }
+        .validation-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .valid-option {
+            border-left: 4px solid #28a745;
+        }
+        .invalid-option {
+            border-left: 4px solid #dc3545;
+        }
+        .cannot-tell-option {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .cannot-tell-option.selected {
+            background-color: #e2e3e5;
+            border-color: #c6c8ca;
+        }
+        .cannot-tell-option label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            margin-bottom: 0;
         }
         .option-card:hover {
             transform: translateY(-2px);
