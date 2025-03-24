@@ -847,10 +847,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalAnswered = answeredQuestions.length;
         const totalScore = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
         
-        // Create enhanced responses with clear validation labels
+        // Create enhanced responses with clear validation labels and spacing between questions
         const enhancedResponses = responses.map((response, idx) => {
             // Get the original options for this question
             const questionOptions = questionnaireData[idx].options;
+            const domain = questionnaireData[idx].domain || questionnaireData[idx].id.split('_')[0];
+            const feedbackType = questionnaireData[idx].is_ge ? 'good execution' : 'tips for improvement';
             
             // Create labeled validations that include the option text
             const labeledValidations = response.validations.map((isValid, optionIdx) => {
@@ -863,19 +865,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             });
             
-            // Include original response data with enhanced validations
+            // Add a formatted response with clear structure and spacing
             return {
-                ...response,
-                questionText: questionnaireData[idx].scenario_text || '',
-                domain: questionnaireData[idx].domain || questionnaireData[idx].id.split('_')[0],
-                feedbackType: questionnaireData[idx].is_ge ? 'good execution' : 'tips for improvement',
-                selectedOptionText: response.selectedOption !== null ? 
-                                   questionOptions[response.selectedOption].substring(0, 100) + 
-                                   (questionOptions[response.selectedOption].length > 100 ? '...' : '') : 
-                                   null,
-                labeledValidations: labeledValidations,
-                // Keep original validations array for backward compatibility
-                validations: response.validations
+                // Start with question ID as the first field for easy identification
+                questionId: response.questionId,
+                spacer: "----------------------------------------",
+                domain: domain,
+                feedbackType: feedbackType,
+                selectionInfo: {
+                    selectedOption: response.selectedOption !== null ? 
+                                   `Option #${response.selectedOption + 1}` : null,
+                    selectedOptionText: response.selectedOption !== null ? 
+                                       questionOptions[response.selectedOption].substring(0, 100) + 
+                                       (questionOptions[response.selectedOption].length > 100 ? '...' : '') : 
+                                       null,
+                    cannotTell: response.cannotTell,
+                    isCorrect: response.isCorrect
+                },
+                validationResults: labeledValidations,
+                userComments: response.comments || "No comments provided"
             };
         });
         
@@ -886,16 +894,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 email: email,
                 additionalComments: additionalComments
             },
-            responses: enhancedResponses,
-            score: {
-                correct: correctCount,
-                total: questionnaireData.length,
-                answered: totalAnswered,
+            sessionInfo: {
+                sessionId: userSessionId,
+                submittedAt: new Date().toISOString(),
+                questionsTotal: questionnaireData.length,
+                questionsAnswered: totalAnswered,
                 cannotTellCount: responses.filter(r => r.cannotTell).length,
-                percentage: totalScore
+                correctCount: correctCount,
+                score: totalScore
             },
-            submittedAt: new Date().toISOString(),
-            sessionId: userSessionId
+            responses: enhancedResponses
         };
         
         // In a real application, you would send this data to your server
