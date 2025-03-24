@@ -834,16 +834,50 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Check if any responses are missing
+        // Check if any responses are missing - consider a question answered if either an option is selected OR "Cannot tell" is checked
         const unansweredCount = responses.filter(r => r.selectedOption === null && !r.cannotTell).length;
         if (unansweredCount > 0) {
             const confirmSubmit = confirm(`You have not answered ${unansweredCount} question(s). Do you want to submit anyway?`);
             if (!confirmSubmit) return;
         }
         
-        // Calculate score
-        const correctCount = responses.filter(r => r.isCorrect).length;
-        const totalScore = Math.round((correctCount / questionnaireData.length) * 100);
+        // Calculate score - only consider questions where an option was selected (not "Cannot tell")
+        const answeredQuestions = responses.filter(r => r.selectedOption !== null);
+        const correctCount = answeredQuestions.filter(r => r.isCorrect).length;
+        const totalAnswered = answeredQuestions.length;
+        const totalScore = totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0;
+        
+        // Create enhanced responses with clear validation labels
+        const enhancedResponses = responses.map((response, idx) => {
+            // Get the original options for this question
+            const questionOptions = questionnaireData[idx].options;
+            
+            // Create labeled validations that include the option text
+            const labeledValidations = response.validations.map((isValid, optionIdx) => {
+                return {
+                    optionNumber: optionIdx + 1,
+                    optionText: questionOptions[optionIdx].substring(0, 100) + (questionOptions[optionIdx].length > 100 ? '...' : ''),
+                    isValid: isValid,
+                    validationLabel: isValid === true ? 'Valid' : 
+                                    isValid === false ? 'Invalid' : 'Not Validated'
+                };
+            });
+            
+            // Include original response data with enhanced validations
+            return {
+                ...response,
+                questionText: questionnaireData[idx].scenario_text || '',
+                domain: questionnaireData[idx].domain || questionnaireData[idx].id.split('_')[0],
+                feedbackType: questionnaireData[idx].is_ge ? 'good execution' : 'tips for improvement',
+                selectedOptionText: response.selectedOption !== null ? 
+                                   questionOptions[response.selectedOption].substring(0, 100) + 
+                                   (questionOptions[response.selectedOption].length > 100 ? '...' : '') : 
+                                   null,
+                labeledValidations: labeledValidations,
+                // Keep original validations array for backward compatibility
+                validations: response.validations
+            };
+        });
         
         // Prepare the final submission data
         const submissionData = {
@@ -852,10 +886,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 email: email,
                 additionalComments: additionalComments
             },
-            responses: responses,
+            responses: enhancedResponses,
             score: {
                 correct: correctCount,
                 total: questionnaireData.length,
+                answered: totalAnswered,
+                cannotTellCount: responses.filter(r => r.cannotTell).length,
                 percentage: totalScore
             },
             submittedAt: new Date().toISOString(),
