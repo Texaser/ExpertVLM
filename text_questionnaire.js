@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Directly check if the JSON file exists
-    fetch('questionnaire_data.json')
+    fetch('filtered_questionnaire_data.json')
         .then(response => {
             console.log("Fetch response code:", response.status);
             return response.text(); // First get the raw text
@@ -347,7 +347,8 @@ document.addEventListener('DOMContentLoaded', function() {
             isCorrect: false,
             feedbackShown: false,  // New field to mark if feedback has been shown
             comments: '',
-            cannotTell: false  // Track if user selected "Cannot tell"
+            cannotTell: false,  // Track if user selected "Cannot tell"
+            obviouslyIncorrect: item.options ? new Array(item.options.length).fill(false) : []  // Track obviously incorrect options
         }));
         
         console.log("Created", newResponses.length, "new response objects");
@@ -495,11 +496,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create HTML for options without validation controls
         const optionsHtml = item.options.map((option, idx) => {
+            const obviouslyIncorrectClass = responses[currentIndex].obviouslyIncorrect[idx] ? 'obviously-incorrect' : '';
+            
             return `
-                <div class="option-card ${responses[currentIndex].selectedOption === idx ? 'selected' : ''}" data-option="${idx}">
+                <div class="option-card ${responses[currentIndex].selectedOption === idx ? 'selected' : ''} ${obviouslyIncorrectClass}" data-option="${idx}">
                     <div class="option-content option-clickable">
                         <i class="bi bi-check-circle-fill check-icon"></i>
                         <div class="option-text">${option}</div>
+                    </div>
+                    <div class="validation-controls">
+                        <button type="button" class="btn btn-sm ${responses[currentIndex].obviouslyIncorrect[idx] ? 'btn-danger' : 'btn-outline-danger'} obviously-incorrect-btn" 
+                            data-option="${idx}">
+                            ${responses[currentIndex].obviouslyIncorrect[idx] ? 'Marked incorrect' : 'Obviously incorrect'}
+                        </button>
                     </div>
                 </div>
             `;
@@ -599,6 +608,35 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
+        // Add event listeners to obviously incorrect buttons
+        document.querySelectorAll('.obviously-incorrect-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const optionIdx = parseInt(this.getAttribute('data-option'));
+                
+                // Toggle obviously incorrect state
+                responses[currentIndex].obviouslyIncorrect[optionIdx] = !responses[currentIndex].obviouslyIncorrect[optionIdx];
+                const isMarkedIncorrect = responses[currentIndex].obviouslyIncorrect[optionIdx];
+                
+                // Update button UI
+                this.textContent = isMarkedIncorrect ? 'Marked incorrect' : 'Obviously incorrect';
+                this.classList.toggle('btn-danger', isMarkedIncorrect);
+                this.classList.toggle('btn-outline-danger', !isMarkedIncorrect);
+                
+                // Update option card UI
+                const optionCard = document.querySelector(`.option-card[data-option="${optionIdx}"]`);
+                optionCard.classList.toggle('obviously-incorrect', isMarkedIncorrect);
+                
+                // If marked as obviously incorrect and it was the selected option, deselect it
+                if (isMarkedIncorrect && responses[currentIndex].selectedOption === optionIdx) {
+                    responses[currentIndex].selectedOption = null;
+                    optionCard.classList.remove('selected');
+                }
+                
+                // Save responses
+                saveResponses();
+            });
+        });
+        
         // Add event listener for the submit button
         document.getElementById('submit-answer-btn').addEventListener('click', function() {
             submitAnswer();
@@ -622,6 +660,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Select an option for the current question
     function selectOption(optionIndex) {
+        // Check if this option has been marked as obviously incorrect
+        if (responses[currentIndex].obviouslyIncorrect[optionIndex]) {
+            console.log(`Option ${optionIndex} is marked as obviously incorrect and cannot be selected`);
+            return; // Don't allow selection of obviously incorrect options
+        }
+        
         // Remove previous selection
         document.querySelectorAll('.option-card').forEach(card => {
             card.classList.remove('selected');
@@ -633,6 +677,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update response data
         responses[currentIndex].selectedOption = optionIndex;
+        
+        // If we're selecting an option, uncheck "Cannot tell"
+        const cannotTellCheckbox = document.getElementById(`cannot-tell-${currentIndex}`);
+        if (cannotTellCheckbox && cannotTellCheckbox.checked) {
+            cannotTellCheckbox.checked = false;
+            responses[currentIndex].cannotTell = false;
+            document.querySelector('.cannot-tell-option').classList.remove('selected');
+        }
         
         // Save responses
         saveResponses();

@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let responses = [];
 
     // Load the questionnaire data
-    fetch('questionnaire_data.json')
+    fetch('filtered_questionnaire_data.json')
         .then(response => response.json())
         .then(data => {
             questionnaireData = data;
