@@ -149,11 +149,19 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(text => {
             console.log("Raw JSON data length:", text.length, "bytes");
-            console.log("First 100 characters of JSON data:", text.substring(0, 100));
             
             try {
                 // Manually parse JSON
                 const allData = JSON.parse(text);
+                
+                // Log the complete data with separators between samples
+                console.log("Complete JSON data:");
+                allData.forEach((item, index) => {
+                    console.log(`\n------ SAMPLE ${index + 1}: ${item.id} ------`);
+                    // Log the entire item object without any truncation
+                    console.log(JSON.stringify(item, null, 2));
+                });
+                
                 return allData;
             } catch (e) {
                 console.error("JSON parsing error:", e);
@@ -290,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Create an array with all options
             const allOptions = [processedItem.groundTruth, ...processedItem.negative_comments];
-            console.log(`Merged ${allOptions.length} options, first option is: "${allOptions[0].substring(0, 50)}..."`);
+            console.log(`Merged ${allOptions.length} options for item ${processedItem.id}`);
             
             // Shuffle options
             shuffleArray(allOptions);
@@ -854,14 +862,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const domain = questionnaireData[idx].domain || questionnaireData[idx].id.split('_')[0];
             const feedbackType = questionnaireData[idx].is_ge ? 'good execution' : 'tips for improvement';
             
-            // Create labeled validations that include the option text
+            // Create labeled validations that include the complete option text
             const labeledValidations = response.validations.map((isValid, optionIdx) => {
                 return {
                     optionNumber: optionIdx + 1,
-                    optionText: questionOptions[optionIdx].substring(0, 100) + (questionOptions[optionIdx].length > 100 ? '...' : ''),
+                    // Display complete text without truncation
+                    optionText: questionOptions[optionIdx],
                     isValid: isValid,
                     validationLabel: isValid === true ? 'Valid' : 
-                                    isValid === false ? 'Invalid' : 'Not Validated'
+                                   isValid === false ? 'Invalid' : 'Not Validated'
                 };
             });
             
@@ -874,11 +883,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 feedbackType: feedbackType,
                 selectionInfo: {
                     selectedOption: response.selectedOption !== null ? 
-                                   `Option #${response.selectedOption + 1}` : null,
+                          `Option #${response.selectedOption + 1}` : null,
+                    // Display complete selected option text without truncation
                     selectedOptionText: response.selectedOption !== null ? 
-                                       questionOptions[response.selectedOption].substring(0, 100) + 
-                                       (questionOptions[response.selectedOption].length > 100 ? '...' : '') : 
-                                       null,
+                              questionOptions[response.selectedOption] : null,
                     cannotTell: response.cannotTell,
                     isCorrect: response.isCorrect
                 },
