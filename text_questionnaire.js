@@ -4,20 +4,63 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentIndex = 0;
     let responses = [];
     let correctAnswers = {};
+    let lastSaveTime = null;
+    let saveTimeout = null;
     
     // Settings for balanced question selection
     const samplesPerType = 2;  // Number of samples per domain and type (GE/tips)
-    const userSessionId = generateUserSessionId();  // Generate a unique session ID for this user
+    const userSessionId = getOrCreateUserSessionId();  // Get existing session ID or create a new one
+    const AUTO_SAVE_INTERVAL = 30000; // Auto-save interval: 30 seconds
     
     console.log("Script loaded, starting data loading...");
     console.log("User session ID:", userSessionId);
 
-    // Generate a unique session ID for this user
-    function generateUserSessionId() {
-        // Use a combination of timestamp and random number
+    // Initialize save status indicator
+    const saveStatus = document.getElementById('save-status');
+    const saveStatusMessage = document.getElementById('save-status-message');
+    const resumeBanner = document.getElementById('resume-banner');
+
+    // Generate a unique session ID for this user or use existing one
+    function getOrCreateUserSessionId() {
+        const savedId = localStorage.getItem('textQuestionnaireSessionId');
+        if (savedId) {
+            console.log("Found existing session ID:", savedId);
+            return savedId;
+        }
+        
+        // Create a new session ID
         const timestamp = new Date().getTime();
         const randomPart = Math.floor(Math.random() * 1000000);
-        return `${timestamp}-${randomPart}`;
+        const newId = `${timestamp}-${randomPart}`;
+        
+        // Save the new ID
+        localStorage.setItem('textQuestionnaireSessionId', newId);
+        return newId;
+    }
+    
+    // Show save status with specified message and class
+    function showSaveStatus(message, className) {
+        saveStatusMessage.textContent = message;
+        saveStatus.className = ''; // Clear existing classes
+        saveStatus.classList.add('visible', className);
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            saveStatus.classList.remove('visible');
+        }, 3000);
+    }
+    
+    // Schedule auto-save
+    function scheduleAutoSave() {
+        // Clear any existing timeout
+        if (saveTimeout) {
+            clearTimeout(saveTimeout);
+        }
+        
+        // Set new timeout
+        saveTimeout = setTimeout(() => {
+            saveResponses(true); // true = is auto-save
+        }, AUTO_SAVE_INTERVAL);
     }
     
     // Select balanced questions from the full dataset
@@ -151,8 +194,12 @@ document.addEventListener('DOMContentLoaded', function() {
             initializeResponses();
             console.log("Response initialization complete, rendering current question...");
             renderCurrentQuestion();
-            console.log("Question rendering complete, updating progress bar...");
+            console.log("Updating progress bar...");
             updateProgressBar();
+            
+            // Start auto-save interval
+            scheduleAutoSave();
+            
             console.log("All initialization complete!");
         })
         .catch(error => {
@@ -285,7 +332,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        responses = questionnaireData.map((item, index) => ({
+        // Create new response objects for each question
+        const newResponses = questionnaireData.map((item, index) => ({
             questionId: item.id,
             selectedOption: null,
             isCorrect: false,
@@ -295,32 +343,55 @@ document.addEventListener('DOMContentLoaded', function() {
             cannotTell: false  // Track if user selected "Cannot tell"
         }));
         
-        console.log("Created", responses.length, "response objects");
+        console.log("Created", newResponses.length, "new response objects");
 
         // Try to load any previously saved responses from localStorage
         const savedResponses = localStorage.getItem('textQuestionnaireResponses');
+        const savedCurrentIndex = localStorage.getItem('textQuestionnaireCurrentIndex');
+        let hasRestoredProgress = false;
+        
         if (savedResponses) {
             try {
                 const parsedResponses = JSON.parse(savedResponses);
-                // Only restore responses for questions that still exist in our data
+                console.log("Found saved responses:", parsedResponses.length);
+                
+                // Only restore responses for questions that match our current data
                 questionnaireData.forEach((item, index) => {
                     const savedResponse = parsedResponses.find(r => r.questionId === item.id);
                     if (savedResponse) {
-                        // Ensure validations array exists and has the right length
+                        // Make sure validations array exists and has the right length
                         if (!savedResponse.validations || savedResponse.validations.length !== item.options.length) {
                             savedResponse.validations = new Array(item.options.length).fill(null);
                         }
-                        // Ensure cannotTell property exists
+                        // Make sure cannotTell property exists
                         if (savedResponse.cannotTell === undefined) {
                             savedResponse.cannotTell = false;
                         }
-                        responses[index] = savedResponse;
+                        newResponses[index] = savedResponse;
+                        hasRestoredProgress = true;
                     }
                 });
+                
+                // Restore current question index if valid
+                if (savedCurrentIndex && !isNaN(parseInt(savedCurrentIndex))) {
+                    const parsedIndex = parseInt(savedCurrentIndex);
+                    if (parsedIndex >= 0 && parsedIndex < questionnaireData.length) {
+                        currentIndex = parsedIndex;
+                        console.log("Restored current index to:", currentIndex);
+                    }
+                }
+                
+                // Show resume banner if we restored progress
+                if (hasRestoredProgress) {
+                    resumeBanner.style.display = 'block';
+                    showSaveStatus("Progress restored", "saved");
+                }
             } catch (e) {
                 console.error('Error parsing saved responses:', e);
             }
         }
+        
+        responses = newResponses;
     }
 
     // Render the current question and its options
@@ -683,8 +754,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Save responses to localStorage
-    function saveResponses() {
-        localStorage.setItem('textQuestionnaireResponses', JSON.stringify(responses));
+    function saveResponses(isAutoSave = false) {
+        try {
+            localStorage.setItem('textQuestionnaireResponses', JSON.stringify(responses));
+            localStorage.setItem('textQuestionnaireCurrentIndex', currentIndex.toString());
+            
+            // Record last save time
+            lastSaveTime = new Date();
+            
+            // Show save indicator (unless it's an auto-save and we don't want to distract)
+            if (!isAutoSave) {
+                showSaveStatus("Progress saved", "saved");
+            }
+            
+            // Reschedule auto-save
+            scheduleAutoSave();
+            
+            return true;
+        } catch (e) {
+            console.error("Error saving progress:", e);
+            showSaveStatus("Save failed", "error");
+            return false;
+        }
     }
 
     // Update the progress bar
@@ -699,6 +790,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentIndex--;
             renderCurrentQuestion();
             updateProgressBar();
+            saveResponses();
         }
     });
 
@@ -720,6 +812,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('submission-form').style.display = 'block';
             document.getElementById('prev-btn').style.display = 'none';
             document.getElementById('next-btn').style.display = 'none';
+            
+            // Final save before submission
+            saveResponses();
         }
     });
 
@@ -740,7 +835,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Check if any responses are missing
-        const unansweredCount = responses.filter(r => r.selectedOption === null).length;
+        const unansweredCount = responses.filter(r => r.selectedOption === null && !r.cannotTell).length;
         if (unansweredCount > 0) {
             const confirmSubmit = confirm(`You have not answered ${unansweredCount} question(s). Do you want to submit anyway?`);
             if (!confirmSubmit) return;
@@ -763,13 +858,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 total: questionnaireData.length,
                 percentage: totalScore
             },
-            submittedAt: new Date().toISOString()
+            submittedAt: new Date().toISOString(),
+            sessionId: userSessionId
         };
         
         // In a real application, you would send this data to your server
         console.log('Submission data:', submissionData);
         
-        // For GitHub Pages demo, we'll just save to localStorage
+        // Show loading state for submission
+        document.getElementById('submit-all-btn').disabled = true;
+        document.getElementById('submit-all-btn').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+        
+        // For GitHub Pages demo, we'll save to localStorage
         localStorage.setItem('textQuestionnaireSubmission', JSON.stringify(submissionData));
         
         // Submit to FormSpree
@@ -781,10 +881,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Use the same FormSpree endpoint as in your video questionnaire
         const formSpreeEndpoint = 'https://formspree.io/f/xdkeaypg';
         
-        // Show loading state
-        document.getElementById('submit-all-btn').disabled = true;
-        document.getElementById('submit-all-btn').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
-        
         // Send data to FormSpree
         fetch(formSpreeEndpoint, {
             method: 'POST',
@@ -795,6 +891,10 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             if (response.ok) {
+                // Clear saved progress data after successful submission
+                localStorage.removeItem('textQuestionnaireResponses');
+                localStorage.removeItem('textQuestionnaireCurrentIndex');
+                
                 document.getElementById('submission-form').style.display = 'none';
                 document.getElementById('submission-success').style.display = 'block';
             } else {
@@ -811,4 +911,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('submit-all-btn').textContent = 'Submit Evaluation';
         });
     }
+    
+    // Handle page leaving/refresh to save state
+    window.addEventListener('beforeunload', function(e) {
+        // Save progress one last time before leaving
+        saveResponses(true);
+    });
 }); 
