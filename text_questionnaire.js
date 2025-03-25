@@ -481,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create the instruction text without LLM validation explanation
         let instructionText = `Here are some expert feedback options (${feedbackType}). Please:
         1. Select the option that <strong>best describes this performance</strong> OR check "<strong>Cannot tell which option is correct</strong>" below.
-        
+        2. If you think the performance is obviously incorrect, you can mark the option as "<strong>Obviously incorrect</strong>" below.
         You must complete this step before submitting.`;
         
         const questionContainer = document.getElementById('question-container');
