@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Directly check if the JSON file exists
-    fetch('filtered_questionnaire_data.json')
+    fetch('all_questionnaire_data.json')
         .then(response => {
             console.log("Fetch response code:", response.status);
             return response.text(); // First get the raw text
