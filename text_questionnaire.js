@@ -845,6 +845,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!confirmSubmit) return;
         }
         
+        // Log obviously incorrect stats before submission
+        const obviouslyIncorrectStats = responses.map((r, idx) => {
+            const markedCount = r.obviouslyIncorrect.filter(Boolean).length;
+            return {
+                questionId: r.questionId,
+                questionNumber: idx + 1,
+                obviouslyIncorrectCount: markedCount,
+                obviouslyIncorrectIndexes: r.obviouslyIncorrect
+                    .map((isIncorrect, optIdx) => isIncorrect ? optIdx + 1 : null)
+                    .filter(optIdx => optIdx !== null)
+            };
+        });
+        console.log('Obviously incorrect stats:', obviouslyIncorrectStats);
+        
         // Calculate score - only consider questions where an option was selected (not "Cannot tell")
         const answeredQuestions = responses.filter(r => r.selectedOption !== null);
         const correctCount = answeredQuestions.filter(r => r.isCorrect).length;
@@ -857,6 +871,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const questionOptions = questionnaireData[idx].options;
             const domain = questionnaireData[idx].domain || questionnaireData[idx].id.split('_')[0];
             const feedbackType = questionnaireData[idx].is_ge ? 'good execution' : 'tips for improvement';
+            
+            // Create array of obviously incorrect options
+            const obviouslyIncorrectOptions = response.obviouslyIncorrect
+                .map((isIncorrect, optIdx) => isIncorrect ? optIdx : null)
+                .filter(optIdx => optIdx !== null)
+                .map(optIdx => ({
+                    optionNumber: optIdx + 1,
+                    optionText: questionOptions[optIdx]
+                }));
             
             // Add a formatted response with clear structure and spacing
             return {
@@ -872,7 +895,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectedOptionText: response.selectedOption !== null ? 
                               questionOptions[response.selectedOption] : null,
                     cannotTell: response.cannotTell,
-                    isCorrect: response.isCorrect
+                    isCorrect: response.isCorrect,
+                    obviouslyIncorrectOptions: obviouslyIncorrectOptions,
+                    obviouslyIncorrectCount: obviouslyIncorrectOptions.length
                 },
                 userComments: response.comments || "No comments provided"
             };
@@ -892,7 +917,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 questionsAnswered: totalAnswered,
                 cannotTellCount: responses.filter(r => r.cannotTell).length,
                 correctCount: correctCount,
-                score: totalScore
+                score: totalScore,
+                obviouslyIncorrectStats: {
+                    totalOptionsMarked: responses.reduce((total, r) => total + r.obviouslyIncorrect.filter(Boolean).length, 0),
+                    questionsWithMarkedOptions: responses.filter(r => r.obviouslyIncorrect.some(Boolean)).length
+                }
             },
             responses: enhancedResponses
         };
