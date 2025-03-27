@@ -1477,7 +1477,7 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
         videoWrapper.innerHTML = `
             <div class="video-player-wrapper" style="position: relative; width: 100%; max-width: 800px; margin: 0 auto;">
                 <video 
-                    id="direct-video-player" 
+                    id="video-player" 
                     width="100%" 
                     height="350px" 
                     controls 
@@ -1502,6 +1502,38 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
         // Get the video element and add event listeners
         const videoElement = videoWrapper.querySelector('video');
         const loadingOverlay = videoWrapper.querySelector('.video-loading');
+        
+        // Setup seeking functionality
+        let userSeeking = false;
+        let targetTime = 0;
+        window.videoSeekEnabled = true;
+        
+        // Add seeking event listeners
+        videoElement.addEventListener('seeking', function() {
+            // Mark that user is dragging
+            userSeeking = true;
+            targetTime = videoElement.currentTime;
+            console.log("User seeking to time:", targetTime);
+        });
+        
+        videoElement.addEventListener('seeked', function() {
+            // Video has jumped to new position
+            console.log("Seeked to:", videoElement.currentTime);
+            
+            // Keep userSeeking true for a while to ensure time updates are correctly applied
+            setTimeout(() => {
+                userSeeking = false;
+            }, 300);
+        });
+        
+        // Prevent progress bar from resetting
+        videoElement.addEventListener('timeupdate', function() {
+            // If user just dragged and position is incorrect, fix it
+            if (userSeeking && Math.abs(videoElement.currentTime - targetTime) > 0.5) {
+                console.log("Correcting time from", videoElement.currentTime, "to", targetTime);
+                videoElement.currentTime = targetTime;
+            }
+        });
         
         // Add error handling
         videoElement.addEventListener('error', function(e) {
@@ -1665,7 +1697,7 @@ function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
     // SIMPLIFIED CONTAINER STRUCTURE - create video directly in wrapper
     container.innerHTML = `
         <video
-            id="direct-video-player"
+            id="video-player"
             width="100%"
             height="350px"
             controls
@@ -1680,6 +1712,38 @@ function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
     
     // Get the video element
     const videoElement = container.querySelector('video');
+    
+    // Setup seeking functionality
+    let userSeeking = false;
+    let targetTime = 0;
+    window.videoSeekEnabled = true;
+    
+    // Add seeking event listeners
+    videoElement.addEventListener('seeking', function() {
+        // Mark that user is dragging
+        userSeeking = true;
+        targetTime = videoElement.currentTime;
+        console.log("User seeking to time:", targetTime);
+    });
+    
+    videoElement.addEventListener('seeked', function() {
+        // Video has jumped to new position
+        console.log("Seeked to:", videoElement.currentTime);
+        
+        // Keep userSeeking true for a while to ensure time updates are correctly applied
+        setTimeout(() => {
+            userSeeking = false;
+        }, 300);
+    });
+    
+    // Prevent progress bar from resetting
+    videoElement.addEventListener('timeupdate', function() {
+        // If user just dragged and position is incorrect, fix it
+        if (userSeeking && Math.abs(videoElement.currentTime - targetTime) > 0.5) {
+            console.log("Correcting time from", videoElement.currentTime, "to", targetTime);
+            videoElement.currentTime = targetTime;
+        }
+    });
     
     // Add error handling
     videoElement.addEventListener('error', function(e) {
