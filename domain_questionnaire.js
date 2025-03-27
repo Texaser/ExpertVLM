@@ -47,9 +47,9 @@ function shuffleArray(array) {
     return newArray;
 }
 
-// 在DOMContentLoaded时检查视频映射是否已加载
+// Check if video mapping is loaded when DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
-    // 验证视频映射文件已加载
+    // Verify that video mapping file is loaded
     if (typeof window.videoFileMapping === 'undefined') {
         console.warn('Video mapping data not loaded. Please ensure video_mapping.js is correctly loaded.');
     } else {
@@ -127,9 +127,21 @@ async function loadQuestions() {
         }
         const allData = await response.json();
         
+        // Remove test mode limitation for basketball
+        // const isTestMode = currentDomain === "basketball";
+        // const sampleLimit = isTestMode ? 10 : 9999;
+        
         // If current domain is set, filter relevant questions
         if (currentDomain) {
-            const filteredData = allData.filter(q => q.domain === currentDomain);
+            let filteredData = allData.filter(q => q.domain === currentDomain);
+            
+            // Remove the sample limit code
+            // Only limit the number of samples in basketball test mode
+            // if (isTestMode) {
+            //     console.log(`Test mode: Loading only ${sampleLimit} basketball samples`);
+            //     filteredData = filteredData.slice(0, sampleLimit);
+            // }
+            
             console.log(`Loaded ${filteredData.length} questions for domain: ${currentDomain}`);
             return filteredData;
         } else {
@@ -155,14 +167,14 @@ function loadUserResponses() {
             const savedPosition = localStorage.getItem(`videoPosition_${currentDomain}_${userSessionId}`);
             if (savedPosition) {
                 currentQuestionIndex = parseInt(savedPosition, 10);
-                // 确保currentQuestionIndex在有效范围内
+                // Ensure currentQuestionIndex is within valid range
                 if (currentQuestionIndex >= questions.length) {
                     currentQuestionIndex = questions.length - 1;
                     if (currentQuestionIndex < 0) currentQuestionIndex = 0;
                 }
             }
             
-            // 确保userResponses数组长度与questions匹配
+            // Ensure userResponses array length matches questions
             ensureUserResponsesMatch();
             
             // Show resume banner
@@ -364,7 +376,7 @@ function renderQuestion(index) {
     const question = questions[index];
     const response = userResponses[index];
     
-    // Clear previous content
+    // Clear previous content - we only clear once
     videoContainer.innerHTML = '';
 
     // Get the template and create a new instance
@@ -444,6 +456,16 @@ function renderQuestion(index) {
     const groundTruthIndex = shuffledOptions.indexOf(question.groundTruth);
     questionElement.querySelector('#options-container').dataset.groundTruthIndex = groundTruthIndex;
     
+    // Dynamically update description text, display correct feedback type based on question.is_ge
+    const descriptionText = questionElement.querySelector('#options-container h5');
+    if (descriptionText) {
+        const domainName = question.domain || currentDomain || "this domain";
+        // Capitalize first letter of domain name
+        const formattedDomain = domainName.charAt(0).toUpperCase() + domainName.slice(1).toLowerCase();
+        const feedbackType = question.is_ge ? "good execution" : "tips for improvement";
+        descriptionText.textContent = `This is a player practicing ${formattedDomain.toLowerCase()}, here are some expert feedbacks (${feedbackType}). Please select the option you believe is correct:`;
+    }
+    
     // Create option elements
     shuffledOptions.forEach((option, i) => {
         const optionCard = document.createElement('div');
@@ -456,30 +478,6 @@ function renderQuestion(index) {
                 <div class="option-text">${option}</div>
             </div>
         `;
-        
-        // Add click event directly to option card
-        optionCard.addEventListener('click', function() {
-            // If already submitted, don't allow selection
-            if (response.feedbackShown) return;
-            
-            // Remove selected class from all options
-            optionsList.querySelectorAll('.option-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            // Add selected class to the current selected option
-            this.classList.add('selected');
-            
-            // Update user response data
-            userResponses[currentQuestionIndex].selectedOption = i;
-            
-            // Enable submit button
-            const submitBtn = questionElement.querySelector('#reveal-btn');
-            submitBtn.disabled = false;
-            
-            // Save response
-            saveUserResponses();
-        });
         
         optionsList.appendChild(optionCard);
     });
@@ -502,6 +500,9 @@ function renderQuestion(index) {
         submitBtn.textContent = response.feedbackShown ? 'Submitted' : 'Confirm Selection';
     }
     
+    // Create quality assessment section (but hide initially)
+    createQualityAssessmentUI(questionElement, response);
+    
     // Set up the comments textarea
     const commentsTextarea = questionElement.querySelector('#comments');
     if (commentsTextarea) {
@@ -512,13 +513,182 @@ function renderQuestion(index) {
         });
     }
     
-    // Clear previous content and append new question
-    videoContainer.innerHTML = '';
+    // Directly add content to DOM (important: don't clear container a second time)
     videoContainer.appendChild(questionElement);
+    
+    // Important: This is our core fix - binding option click events after adding to the DOM
+    // Now elements are in the document, we can reliably access all related elements
+    videoContainer.querySelectorAll('.option-card').forEach(card => {
+        card.addEventListener('click', function() {
+            // If already submitted, don't allow selection
+            if (response.feedbackShown) return;
+            
+            // Remove selected class from all options
+            const allOptionCards = videoContainer.querySelectorAll('.option-card');
+            allOptionCards.forEach(c => c.classList.remove('selected'));
+            
+            // Add selected class to the current selected option
+            this.classList.add('selected');
+            
+            // Update user response data
+            userResponses[currentQuestionIndex].selectedOption = parseInt(this.dataset.index, 10);
+            
+            // Now the button is in the DOM, can be reliably found
+            const submitBtn = videoContainer.querySelector('#reveal-btn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+            } else {
+                console.warn('Submit button (#reveal-btn) not found in the DOM');
+            }
+            
+            // Save response
+            saveUserResponses();
+        });
+    });
     
     // If this question was already answered, show Phase 2
     if (response.feedbackShown) {
         showFeedback(questionElement);
+    }
+}
+
+// New function: Create quality assessment UI
+function createQualityAssessmentUI(questionElement, response) {
+    // Get or create ground-truth-container
+    let groundTruthContainer = questionElement.querySelector('#ground-truth-container');
+    if (!groundTruthContainer) {
+        groundTruthContainer = document.createElement('div');
+        groundTruthContainer.id = 'ground-truth-container';
+        groundTruthContainer.className = 'mt-4';
+        groundTruthContainer.style.display = 'none';
+        
+        // Add container to question element
+        const optionsSection = questionElement.querySelector('.options-section');
+        if (optionsSection) {
+            optionsSection.parentNode.insertBefore(groundTruthContainer, optionsSection.nextSibling);
+        } else {
+            questionElement.appendChild(groundTruthContainer);
+        }
+    }
+    
+    // Create Ground Truth title and content
+    groundTruthContainer.innerHTML = `
+        <h5>Ground Truth:</h5>
+        <div class="comment-card" id="ground-truth-text"></div>
+        <div class="feedback-message" id="feedback-message"></div>
+    `;
+    
+    // Create quality assessment container
+    const filterContainer = document.createElement('div');
+    filterContainer.className = 'filter-container mt-4';
+    groundTruthContainer.appendChild(filterContainer);
+    
+    // Add quality assessment content
+    filterContainer.innerHTML = `
+        <h5>Sample Quality Assessment:</h5>
+        
+        <!-- Add quality selection section at top -->
+        <div class="quality-selection mb-4">
+            <p>How would you rate the overall quality of this sample?</p>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="qualityRating" id="quality-good" value="good" checked>
+                <label class="form-check-label" for="quality-good">
+                    <strong>Good quality</strong> - The video and the ground truth match well
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="qualityRating" id="quality-bad" value="bad">
+                <label class="form-check-label" for="quality-bad">
+                    <strong>Poor quality</strong> - There are issues with this sample
+                </label>
+            </div>
+        </div>
+        
+        <!-- Issue identification section, always shown -->
+        <div id="quality-issues-container">
+            <p>Please identify any issues with this sample (if any):</p>
+            
+            <div class="filter-options">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-groundtruth">
+                    <label class="form-check-label" for="filter-groundtruth">
+                        The video does NOT clearly contain the action described in the ground truth
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-others">
+                    <label class="form-check-label" for="filter-others">
+                        One or more of the other options (not ground truth) ARE also supported by the video
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-language">
+                    <label class="form-check-label" for="filter-language">
+                        There are language issues (grammatically incorrect, illogical, or other language problems)
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="filter-other-issues">
+                    <label class="form-check-label" for="filter-other-issues">
+                        Other issues
+                    </label>
+                </div>
+                
+                <div class="flag-reasons" id="flag-reasons-container" style="display: none;">
+                    <label for="flag-reasons" class="form-label">Please specify the issues:</label>
+                    <textarea class="form-control" id="flag-reasons" rows="3" placeholder="Describe what problems you noticed..."></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-3 mt-4">
+            <label for="comments" class="form-label">Additional Comments (Optional)</label>
+            <textarea class="form-control" id="comments" placeholder="Any comments about your selection"></textarea>
+        </div>
+        
+        <div class="confirmation-buttons">
+            <button type="button" id="confirm-filter-btn" class="btn btn-success" onclick="handleConfirmFilterBtnClick(this)">Submit Quality Assessment</button>
+        </div>
+    `;
+    
+    // Set initial state of quality selection (if saved values exist)
+    if (response.filterFlags && response.filterFlags.overallQuality) {
+        const qualityGood = filterContainer.querySelector('#quality-good');
+        const qualityBad = filterContainer.querySelector('#quality-bad');
+        
+        if (qualityGood && qualityBad) {
+            if (response.filterFlags.overallQuality === 'good') {
+                qualityGood.checked = true;
+                qualityBad.checked = false;
+            } else {
+                qualityGood.checked = false;
+                qualityBad.checked = true;
+            }
+        }
+    }
+    
+    // Set up event handling for other issues checkbox
+    const otherIssuesCheckbox = filterContainer.querySelector('#filter-other-issues');
+    const flagReasonsContainer = filterContainer.querySelector('#flag-reasons-container');
+    
+    if (otherIssuesCheckbox && flagReasonsContainer) {
+        otherIssuesCheckbox.addEventListener('change', function() {
+            flagReasonsContainer.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // If other issues already selected, show reasons text box
+        if (response.filterFlags && response.filterFlags.otherIssues) {
+            otherIssuesCheckbox.checked = true;
+            flagReasonsContainer.style.display = 'block';
+            
+            const flagReasons = flagReasonsContainer.querySelector('#flag-reasons');
+            if (flagReasons) {
+                flagReasons.value = response.flagReasons || '';
+            }
+        }
     }
 }
 
@@ -530,11 +700,16 @@ function saveFilterFlags(index, questionElement) {
     const filterOtherIssues = questionElement.querySelector('#filter-other-issues');
     const flagReasons = questionElement.querySelector('#flag-reasons');
     
+    // Get overall quality assessment
+    const qualityGood = questionElement.querySelector('#quality-good');
+    const overallQuality = qualityGood && qualityGood.checked ? 'good' : 'bad';
+    
     userResponses[index].filterFlags = {
         groundTruthNotClear: filterGroundtruth ? filterGroundtruth.checked : false,
         otherOptionsSupported: filterOthers ? filterOthers.checked : false,
         languageIssues: filterLanguage ? filterLanguage.checked : false,
-        otherIssues: filterOtherIssues ? filterOtherIssues.checked : false
+        otherIssues: filterOtherIssues ? filterOtherIssues.checked : false,
+        overallQuality: overallQuality // Add overall quality assessment
     };
     
     if (filterOtherIssues && filterOtherIssues.checked && flagReasons) {
@@ -550,11 +725,14 @@ function saveFilterFlags(index, questionElement) {
 // Update the progress bar
 function updateProgressBar() {
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-    progressBar.style.width = `${progress}%`;
-    progressBar.setAttribute('aria-valuenow', progress);
+    console.log(`Updating progress bar: ${progress}%, currentQuestionIndex: ${currentQuestionIndex}, questions.length: ${questions.length}`);
+    
+    // Directly set DOM element width property to avoid potential CSS conflicts
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    document.getElementById('progress-bar').setAttribute('aria-valuenow', progress);
     
     // Update progress count text
-    progressCount.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+    document.getElementById('progress-count').textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
 }
 
 // Go to the previous question
@@ -564,18 +742,97 @@ function goToPreviousQuestion() {
         renderQuestion(currentQuestionIndex);
         updateNavigationButtons();
         updateProgressBar();
+        
+        // Ensure button state is correct when returning to previous question
+        setTimeout(ensureQuestionButtonState, 100); // Give DOM time to update
     }
 }
 
 // Go to the next question
 function goToNextQuestion() {
+    // Check if the current question has been fully answered
+    if (currentQuestionIndex < questions.length) {
+        const currentResponse = userResponses[currentQuestionIndex];
+        
+        // First checkpoint: If flag data shows this question is already complete, proceed directly
+        if (currentResponse.assessmentSubmitted === true || 
+            (currentResponse.feedbackShown && currentResponse.filterFlags && currentResponse.filterFlags.overallQuality)) {
+            console.log("Stored state data indicates question is complete, proceeding to next question");
+        }
+        // Otherwise perform UI checks and prompts
+        else {
+            // Check if an option has been selected
+            if (currentResponse.selectedOption === null) {
+                alert('Please complete Step 1: Select an option and click "Confirm Selection".');
+                
+                // Highlight the confirm button
+                const confirmBtn = document.querySelector('#reveal-btn');
+                if (confirmBtn && !confirmBtn.disabled) {
+                    confirmBtn.classList.add('btn-pulse');
+                    setTimeout(() => confirmBtn.classList.remove('btn-pulse'), 3000);
+                }
+                return;
+            }
+            
+            // Check if feedback has been shown
+            if (!currentResponse.feedbackShown) {
+                alert('Please click the "Confirm Selection" button to submit your answer (Step 1).');
+                
+                // Highlight the confirm button
+                const confirmBtn = document.querySelector('#reveal-btn');
+                if (confirmBtn && !confirmBtn.disabled) {
+                    confirmBtn.classList.add('btn-pulse');
+                    setTimeout(() => confirmBtn.classList.remove('btn-pulse'), 3000);
+                }
+                return;
+            }
+            
+            // Check quality assessment button state
+            const submitBtn = document.querySelector('#confirm-filter-btn');
+            if (submitBtn) {
+                // Button is enabled, indicating assessment not submitted
+                if (!submitBtn.disabled && !submitBtn.classList.contains('btn-secondary')) {
+                    alert('Please complete Step 2: Submit your quality assessment before proceeding.');
+                    
+                    // Highlight the assessment submission button
+                    submitBtn.classList.add('btn-pulse');
+                    setTimeout(() => submitBtn.classList.remove('btn-pulse'), 3000);
+                    
+                    // Scroll to assessment section
+                    const assessmentContainer = document.querySelector('.filter-container');
+                    if (assessmentContainer) {
+                        assessmentContainer.scrollIntoView({ behavior: 'smooth' });
+                    }
+                    return;
+                }
+            }
+            
+            // Check if quality assessment is complete
+            if (!currentResponse.filterFlags || !currentResponse.filterFlags.overallQuality) {
+                alert('Please complete Step 2: Rate the overall quality (good or poor) before continuing.');
+                
+                // Scroll to assessment section
+                const qualitySelection = document.querySelector('.quality-selection');
+                if (qualitySelection) {
+                    qualitySelection.scrollIntoView({ behavior: 'smooth' });
+                }
+                return;
+            }
+        }
+    }
+    
+    // All checks passed, proceed to next question
     if (currentQuestionIndex < questions.length - 1) {
+        // Clear any next question prompts (if present)
+        const nextPrompt = document.querySelector('.navigation-buttons .text-center.mt-2');
+        if (nextPrompt) nextPrompt.remove();
+        
         currentQuestionIndex++;
         renderQuestion(currentQuestionIndex);
         updateNavigationButtons();
         updateProgressBar();
     } else {
-        // Show submission form when all questions are answered
+        // Show submission form
         videoContainer.style.display = 'none';
         prevBtn.style.display = 'none';
         nextBtn.style.display = 'none';
@@ -586,9 +843,10 @@ function goToNextQuestion() {
 // Update navigation buttons' state
 function updateNavigationButtons() {
     prevBtn.disabled = currentQuestionIndex === 0;
-    nextBtn.disabled = currentQuestionIndex === questions.length - 1;
+    // Remove auto-disabling logic for the Next button on the last question
+    // nextBtn.disabled = currentQuestionIndex === questions.length - 1;
     
-    // 更新下一步按钮的文本
+    // Update next button text
     nextBtn.textContent = (currentQuestionIndex === questions.length - 1) ? 'Finish' : 'Next';
 }
 
@@ -603,7 +861,22 @@ function submitAllResponses() {
         return;
     }
     
-    // Check if there are unanswered questions
+    // Check for incomplete responses
+    const incompleteResponses = userResponses.filter(r => 
+        r.selectedOption === null || // No option selected
+        !r.feedbackShown || // Confirmation button not clicked
+        !r.filterFlags || !r.filterFlags.overallQuality // Quality not assessed
+    );
+    
+    if (incompleteResponses.length > 0) {
+        const confirmSubmit = confirm(`You have ${incompleteResponses.length} question(s) that are not fully completed. Do you want to submit anyway?`);
+        if (!confirmSubmit) return;
+    }
+    
+    // Calculate statistics but don't display on screen
+    const statistics = generateSubmissionStatistics(false);
+    
+    // Original unanswered check logic can be kept as backup
     const unansweredCount = userResponses.filter(r => r.selectedOption === null).length;
     if (unansweredCount > 0) {
         const confirmSubmit = confirm(`You have not answered ${unansweredCount} question(s). Do you want to submit anyway?`);
@@ -649,6 +922,7 @@ function submitAllResponses() {
             questionsTotal: questions.length,
             questionsAnswered: questions.length - unansweredCount
         },
+        statistics: statistics, // Add statistics (only included in submission data)
         responses: enhancedResponses
     };
     
@@ -664,10 +938,154 @@ function submitAllResponses() {
     submitToFormSpree(submissionData);
 }
 
+// New function: Generate submission statistics
+function generateSubmissionStatistics(showOnScreen = true) {
+    // Calculate various statistics
+    const totalQuestions = questions.length;
+    
+    // Modify definition of answered questions to fully answered
+    const answeredQuestions = userResponses.filter(r => 
+        r.selectedOption !== null && // Option selected
+        r.feedbackShown && // Confirmed
+        r.filterFlags && r.filterFlags.overallQuality // Quality assessment completed
+    ).length;
+    
+    const correctAnswers = userResponses.filter(r => r.isCorrect).length;
+    const flaggedQuestions = userResponses.filter(r => 
+        r.filterFlags && (
+            r.filterFlags.groundTruthNotClear || 
+            r.filterFlags.otherOptionsSupported || 
+            r.filterFlags.languageIssues || 
+            r.filterFlags.otherIssues
+        )
+    ).length;
+    
+    // Count various issue flags
+    const groundTruthIssues = userResponses.filter(r => r.filterFlags && r.filterFlags.groundTruthNotClear).length;
+    const otherOptionsIssues = userResponses.filter(r => r.filterFlags && r.filterFlags.otherOptionsSupported).length;
+    const languageIssues = userResponses.filter(r => r.filterFlags && r.filterFlags.languageIssues).length;
+    const otherIssues = userResponses.filter(r => r.filterFlags && r.filterFlags.otherIssues).length;
+    
+    // Only create HTML and add to page if showOnScreen is true
+    if (showOnScreen) {
+        // Create statistics table
+        let statsHtml = `
+        <div class="submission-stats card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Submission Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Overall Statistics</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Total Questions</td>
+                                <td>${totalQuestions}</td>
+                            </tr>
+                            <tr>
+                                <td>Answered Questions</td>
+                                <td>${answeredQuestions} (${Math.round(answeredQuestions/totalQuestions*100)}%)</td>
+                            </tr>
+                            <tr>
+                                <td>Correct Answers</td>
+                                <td>${correctAnswers} (${Math.round(correctAnswers/answeredQuestions*100)}%)</td>
+                            </tr>
+                            <tr>
+                                <td>Questions with Quality Issues</td>
+                                <td>${flaggedQuestions} (${Math.round(flaggedQuestions/totalQuestions*100)}%)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Quality Issues Breakdown</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Ground Truth Unclear</td>
+                                <td>${groundTruthIssues} (${Math.round(groundTruthIssues/flaggedQuestions*100 || 0)}%)</td>
+                            </tr>
+                            <tr>
+                                <td>Other Options Also Valid</td>
+                                <td>${otherOptionsIssues} (${Math.round(otherOptionsIssues/flaggedQuestions*100 || 0)}%)</td>
+                            </tr>
+                            <tr>
+                                <td>Language Issues</td>
+                                <td>${languageIssues} (${Math.round(languageIssues/flaggedQuestions*100 || 0)}%)</td>
+                            </tr>
+                            <tr>
+                                <td>Other Issues</td>
+                                <td>${otherIssues} (${Math.round(otherIssues/flaggedQuestions*100 || 0)}%)</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <p class="text-muted small">Note: These statistics will be included in your submission.</p>
+                </div>
+            </div>
+        </div>`;
+        
+        // Add to page
+        const submissionForm = document.getElementById('submission-form');
+        const submitButton = document.getElementById('submit-all-btn');
+        const statsContainer = document.createElement('div');
+        statsContainer.id = 'stats-container';
+        statsContainer.innerHTML = statsHtml;
+        
+        // Ensure only added once
+        const existingStats = document.getElementById('stats-container');
+        if (existingStats) {
+            existingStats.innerHTML = statsHtml;
+        } else {
+            submissionForm.insertBefore(statsContainer, submitButton);
+        }
+    }
+    
+    // Log statistics to console (for debugging)
+    console.log("Submission Statistics:", {
+        totalQuestions,
+        answeredQuestions,
+        correctAnswers,
+        flaggedQuestions,
+        issueBreakdown: {
+            groundTruthIssues,
+            otherOptionsIssues,
+            languageIssues,
+            otherIssues
+        }
+    });
+    
+    return {
+        totalQuestions,
+        answeredQuestions,
+        correctAnswers,
+        flaggedQuestions,
+        issueBreakdown: {
+            groundTruthIssues,
+            otherOptionsIssues,
+            languageIssues,
+            otherIssues
+        }
+    };
+}
+
 // Function to submit to FormSpree
 function submitToFormSpree(data) {
     // FormSpree endpoint - use the same as in text_questionnaire.js
     const formSpreeEndpoint = 'https://formspree.io/f/xdkeaypg';
+    
+    // Remove test mode flag for basketball submissions
+    // Modify data in test mode, add flags
+    // if (currentDomain === "basketball" && data.responses && data.responses.length <= 10) {
+    //     data.isTestSubmission = true;
+    //     data.testInfo = {
+    //         testMode: true,
+    //         message: "This is a test submission, containing only the first 10 basketball samples",
+    //         timestamp: new Date().toISOString()
+    //     };
+    //     console.log("Test mode: Submission data marked as test submission");
+    // }
     
     // Send data to FormSpree
     fetch(formSpreeEndpoint, {
@@ -688,6 +1106,19 @@ function submitToFormSpree(data) {
             
             submissionForm.style.display = 'none';
             submissionSuccess.style.display = 'block';
+            
+            // Remove test mode notice
+            // Display special notice in test mode
+            // if (currentDomain === "basketball" && data.responses && data.responses.length <= 10) {
+            //     const testNotice = document.createElement('div');
+            //     testNotice.className = 'alert alert-warning mt-3';
+            //     testNotice.innerHTML = `
+            //         <h5><i class="bi bi-exclamation-triangle"></i> Test Mode Submission</h5>
+            //         <p>You just made a <strong>test mode</strong> submission, containing only the first 10 basketball samples.</p>
+            //         <p>This submission has been marked as test data.</p>
+            //     `;
+            //     submissionSuccess.appendChild(testNotice);
+            // }
         } else {
             console.error('Form submission failed:', response.status, response.statusText);
             alert('There was a problem submitting your responses. Please try again.');
@@ -748,7 +1179,7 @@ window.handleRevealBtnClick = function(button) {
     // Move to Phase 2
     const phaseIndicator = questionElement.querySelector('#phase-indicator');
     if (phaseIndicator) {
-        phaseIndicator.textContent = 'Phase 2: Review and Filter';
+        phaseIndicator.textContent = 'Phase 2: Quality Assessment';
         phaseIndicator.style.backgroundColor = '#cff4fc';
     }
     
@@ -778,10 +1209,10 @@ window.handleRevealBtnClick = function(button) {
         card.style.cursor = 'default';
     });
     
-    // Hide reveal button
+    // Change button text and disable
     button.style.display = 'none';
     
-    // Show ground truth container
+    // Show ground truth container (show assessment section)
     const groundTruthContainer = questionElement.querySelector('#ground-truth-container');
     if (groundTruthContainer) {
         groundTruthContainer.style.display = 'block';
@@ -810,36 +1241,13 @@ window.handleRevealBtnClick = function(button) {
         }
     }
     
-    // Set up filter checkboxes based on stored values
-    const response = userResponses[currentQuestionIndex];
-    if (response.filterFlags) {
-        const filterGroundtruth = questionElement.querySelector('#filter-groundtruth');
-        const filterOthers = questionElement.querySelector('#filter-others');
-        const filterLanguage = questionElement.querySelector('#filter-language');
-        const filterOtherIssues = questionElement.querySelector('#filter-other-issues');
-        
-        if (filterGroundtruth) filterGroundtruth.checked = response.filterFlags.groundTruthNotClear;
-        if (filterOthers) filterOthers.checked = response.filterFlags.otherOptionsSupported;
-        if (filterLanguage) filterLanguage.checked = response.filterFlags.languageIssues;
-        if (filterOtherIssues) filterOtherIssues.checked = response.filterFlags.otherIssues;
-        
-        if (response.filterFlags.otherIssues) {
-            const flagReasonsContainer = questionElement.querySelector('#flag-reasons-container');
-            if (flagReasonsContainer) flagReasonsContainer.style.display = 'block';
-            
-            const flagReasons = questionElement.querySelector('#flag-reasons');
-            if (flagReasons) flagReasons.value = response.flagReasons || '';
-        }
-    }
-    
-    // Set up other issue checkbox to show/hide text area
-    const otherIssuesCheckbox = questionElement.querySelector('#filter-other-issues');
-    const flagReasonsContainer = questionElement.querySelector('#flag-reasons-container');
-    
-    if (otherIssuesCheckbox && flagReasonsContainer) {
-        otherIssuesCheckbox.addEventListener('change', function() {
-            flagReasonsContainer.style.display = this.checked ? 'block' : 'none';
-        });
+    // Clearly prompt user for step 2 action
+    const assessmentHeader = questionElement.querySelector('.filter-container h5');
+    if (assessmentHeader) {
+        assessmentHeader.innerHTML = '<i class="bi bi-arrow-down-circle"></i> Step 2: Please complete the quality assessment below';
+        assessmentHeader.style.color = '#0d6efd';
+        assessmentHeader.style.fontSize = '1.1rem';
+        assessmentHeader.style.marginBottom = '1rem';
     }
 };
 
@@ -848,8 +1256,34 @@ window.handleConfirmFilterBtnClick = function(button) {
     const questionElement = button.closest('.video-container');
     if (!questionElement) return;
     
+    // Save quality assessment information
     saveFilterFlags(currentQuestionIndex, questionElement);
-    goToNextQuestion();
+    
+    // Ensure overallQuality was saved
+    const response = userResponses[currentQuestionIndex];
+    if (!response.filterFlags || !response.filterFlags.overallQuality) {
+        alert('Please select an overall quality rating (Good quality or Poor quality) before continuing.');
+        return;
+    }
+    
+    // Ensure this state is correctly set and saved - important
+    response.assessmentSubmitted = true;
+    saveUserResponses(); // Ensure state is saved
+    
+    // Change button text to indicate submission
+    button.textContent = 'Assessment Submitted';
+    button.disabled = true;
+    button.classList.remove('btn-success');
+    button.classList.add('btn-secondary');
+    
+    // Don't automatically advance, let the user manually click the "Next" button
+    // goToNextQuestion();
+    
+    // Prompt user to click next
+    const nextBtn = document.getElementById('next-btn');
+    if (nextBtn) {
+        nextBtn.classList.add('btn-pulse');  // Can add pulse animation effect in CSS
+    }
 };
 
 // Show feedback after submission
@@ -873,7 +1307,7 @@ function showFeedback(questionElement) {
     // Show Phase 2
     const phaseIndicator = questionElement.querySelector('#phase-indicator');
     if (phaseIndicator) {
-        phaseIndicator.textContent = 'Phase 2: Review and Filter';
+        phaseIndicator.textContent = 'Phase 2: Quality Assessment';
         phaseIndicator.style.backgroundColor = '#cff4fc';
     }
     
@@ -932,8 +1366,23 @@ function showFeedback(questionElement) {
         }
     }
     
-    // Set up filter checkboxes based on stored values
+    // Set up quality rating based on stored values
     if (response.filterFlags) {
+        // Set overall quality assessment radio button state
+        const qualityGood = questionElement.querySelector('#quality-good');
+        const qualityBad = questionElement.querySelector('#quality-bad');
+        
+        if (qualityGood && qualityBad && response.filterFlags.overallQuality) {
+            if (response.filterFlags.overallQuality === 'good') {
+                qualityGood.checked = true;
+                qualityBad.checked = false;
+            } else {
+                qualityGood.checked = false;
+                qualityBad.checked = true;
+            }
+        }
+        
+        // Set detailed issue checkbox states
         const filterGroundtruth = questionElement.querySelector('#filter-groundtruth');
         const filterOthers = questionElement.querySelector('#filter-others');
         const filterLanguage = questionElement.querySelector('#filter-language');
@@ -951,6 +1400,17 @@ function showFeedback(questionElement) {
             const flagReasons = questionElement.querySelector('#flag-reasons');
             if (flagReasons) flagReasons.value = response.flagReasons || '';
         }
+        
+        // If quality assessment is complete, disable confirm button and mark state
+        if (response.filterFlags.overallQuality && response.assessmentSubmitted) {
+            const confirmFilterBtn = questionElement.querySelector('#confirm-filter-btn');
+            if (confirmFilterBtn) {
+                confirmFilterBtn.textContent = 'Assessment Submitted';
+                confirmFilterBtn.disabled = true;
+                confirmFilterBtn.classList.remove('btn-success');
+                confirmFilterBtn.classList.add('btn-secondary');
+            }
+        }
     }
     
     // Set up other issue checkbox to show/hide text area
@@ -961,6 +1421,27 @@ function showFeedback(questionElement) {
         otherIssuesCheckbox.addEventListener('change', function() {
             flagReasonsContainer.style.display = this.checked ? 'block' : 'none';
         });
+    }
+
+    // Ensure button state is correct for completed questions
+    ensureQuestionButtonState();
+}
+
+// Ensure button state is correct for completed questions
+function ensureQuestionButtonState() {
+    const currentResponse = userResponses[currentQuestionIndex];
+    if (!currentResponse) return;
+    
+    // Check if button state is consistent with data state
+    if (currentResponse.assessmentSubmitted) {
+        const confirmFilterBtn = document.querySelector('#confirm-filter-btn');
+        if (confirmFilterBtn && !confirmFilterBtn.disabled) {
+            confirmFilterBtn.textContent = 'Assessment Submitted';
+            confirmFilterBtn.disabled = true;
+            confirmFilterBtn.classList.remove('btn-success');
+            confirmFilterBtn.classList.add('btn-secondary');
+            console.log("Button state restored to submitted");
+        }
     }
 }
 
@@ -974,263 +1455,393 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
     // Increment attempt counter
     videoLoadAttempts[fileName]++;
     
-    // 尝试顺序改为：1.本地视频 2.Google Drive
     const videoWrapper = videoPlayer.closest('.video-wrapper');
     
-    console.log(`尝试加载视频: ${fileName}, 尝试次数: ${videoLoadAttempts[fileName]}`);
+    console.log(`Attempting to load video: ${fileName}, attempt number: ${videoLoadAttempts[fileName]}`);
     
-    // 首先尝试从本地加载
-    if (videoLoadAttempts[fileName] === 1) {
-        // 尝试多个可能的本地路径
-        const questionId = fileName.replace('.mp4', '');
-        const videoPaths = [
-            `video_clips/${fileName}`,
-            `videos/${fileName}`,
-            `video_clips/${questionId}.mp4`,
-            `videos/${questionId}.mp4`
-        ];
+    // Extract base filename without path
+    const baseFileName = fileName.replace(/^.*[\\\/]/, '');
+    
+    // First try loading from Cloudinary using video_mapping.js
+    const cloudinaryUrl = getCloudinaryUrl(baseFileName);
+    
+    if (cloudinaryUrl && videoWrapper) {
+        console.log(`Found Cloudinary URL for ${baseFileName}: ${cloudinaryUrl}`);
         
-        console.log(`尝试从本地路径加载: ${videoPaths[0]}`);
-        
-        // 清除视频容器的现有内容
-        if (videoWrapper) {
-            while (videoWrapper.firstChild) {
-                videoWrapper.removeChild(videoWrapper.firstChild);
-            }
-            
-            // 创建视频容器
-            const container = document.createElement('div');
-            container.className = 'video-player-container';
-            
-            // 创建视频元素
-            const videoElement = document.createElement('video');
-            videoElement.id = 'direct-video-player';
-            videoElement.width = "100%";
-            videoElement.height = "350px";
-            videoElement.controls = true;
-            videoElement.controlsList = "nodownload";
-            videoElement.preload = "auto";
-            videoElement.style.backgroundColor = "#000";
-            
-            // 创建source元素
-            const source = document.createElement('source');
-            source.type = "video/mp4";
-            source.src = videoPaths[0];
-            videoElement.appendChild(source);
-            
-            // 添加错误处理
-            videoElement.addEventListener('error', function(e) {
-                console.error("视频加载错误:", e);
-                
-                // 如果本地加载失败，尝试Google Drive
-                const fileId = getFileIdFromName(fileName);
-                if (fileId) {
-                    console.log(`本地加载失败，尝试从Google Drive加载: ${fileName}, ID: ${fileId}`);
-                    tryLoadFromGoogleDrive(container, fileId, fileName);
-                } else {
-                    // 显示错误消息
-                    showVideoErrorMessage(videoWrapper, fileName);
-                }
-            });
-            
-            // 添加成功处理
-            videoElement.addEventListener('canplay', function() {
-                console.log(`视频 ${fileName} 成功从本地加载!`);
-            });
-            
-            // 将视频元素添加到容器
-            container.appendChild(videoElement);
-            videoWrapper.appendChild(container);
-            
-            // 加载视频
-            videoElement.load();
-            return;
+        // Clear existing content from video container
+        while (videoWrapper.firstChild) {
+            videoWrapper.removeChild(videoWrapper.firstChild);
         }
+        
+        // SIMPLIFIED VIDEO CONTAINER - remove nested backgrounds that create the black box
+        videoWrapper.innerHTML = `
+            <div class="video-player-wrapper" style="position: relative; width: 100%; max-width: 800px; margin: 0 auto;">
+                <video 
+                    id="direct-video-player" 
+                    width="100%" 
+                    height="350px" 
+                    controls 
+                    controlsList="nodownload" 
+                    crossorigin="anonymous" 
+                    playsinline 
+                    style="display: block; margin: 0 auto; border-radius: 4px; max-width: 100%;">
+                    <source src="${cloudinaryUrl}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="video-loading" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); color: white; z-index: 5;">
+                    <div style="text-align: center;">
+                        <div class="spinner-border text-light" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p style="margin-top: 10px;">Loading video...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Get the video element and add event listeners
+        const videoElement = videoWrapper.querySelector('video');
+        const loadingOverlay = videoWrapper.querySelector('.video-loading');
+        
+        // Add error handling
+        videoElement.addEventListener('error', function(e) {
+            console.error("Video loading error with Cloudinary:", e);
+            console.error("Error code:", videoElement.error ? videoElement.error.code : "unknown");
+            console.error("Error message:", videoElement.error ? videoElement.error.message : "unknown");
+            
+            // Hide loading overlay
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            
+            // Add visible error message to page
+            const errorMsg = document.createElement('div');
+            errorMsg.className = "alert alert-danger mt-2";
+            errorMsg.innerHTML = `<strong>Error loading video from Cloudinary:</strong> ${videoElement.error ? videoElement.error.message : "Unknown error"}`;
+            videoWrapper.appendChild(errorMsg);
+            
+            // Fall back to local video loading after a short delay
+            setTimeout(() => {
+                tryLoadFromLocalPaths(videoWrapper, videoWrapper, fileName);
+            }, 500);
+        });
+        
+        // Add success handler
+        videoElement.addEventListener('canplay', function() {
+            console.log(`Video ${fileName} successfully loaded from Cloudinary!`);
+            
+            // Hide loading overlay
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            
+            // Ensure video is visible
+            videoElement.style.display = "block";
+        });
+        
+        // Load video
+        videoElement.load();
+        return;
     } else {
-        // 后续尝试使用Google Drive
-        const fileId = getFileIdFromName(fileName);
-        if (fileId && videoWrapper) {
-            // 清除容器
+        console.log(`No Cloudinary URL found for ${baseFileName}, trying local paths`);
+        // Fall back to local paths if no Cloudinary URL found
+        if (videoWrapper) {
+            // Clear existing content if any
             while (videoWrapper.firstChild) {
                 videoWrapper.removeChild(videoWrapper.firstChild);
             }
             
-            const container = document.createElement('div');
-            container.className = 'video-player-container';
-            videoWrapper.appendChild(container);
-            
-            // 尝试从Google Drive加载
-            tryLoadFromGoogleDrive(container, fileId, fileName);
-            return;
-        } else {
-            // 如果都失败了，显示错误消息
-            showVideoErrorMessage(videoWrapper, fileName);
+            tryLoadFromLocalPaths(videoWrapper, videoWrapper, fileName);
         }
     }
 }
 
-// 从Google Drive加载视频
-function tryLoadFromGoogleDrive(container, fileId, fileName) {
-    if (!container) return;
+// Helper function to get Cloudinary URL from video_mapping.js
+function getCloudinaryUrl(fileName) {
+    // Check if video_mapping.js is loaded and accessible
+    if (typeof window.videoFileMapping === 'undefined') {
+        console.error("Video mapping is not available: window.videoFileMapping is undefined");
+        console.log("Available on window object:", Object.keys(window).filter(k => k.includes('video')));
+        return null;
+    }
     
-    // 创建直接访问链接
-    const directLinkElement = document.createElement('div');
-    directLinkElement.className = 'text-center mt-3 mb-3';
-    directLinkElement.innerHTML = `
-        <a href="https://drive.google.com/file/d/${fileId}/view" 
-           target="_blank" class="btn btn-primary btn-lg">
-           <i class="bi bi-play-circle"></i> 在Google Drive中播放视频
-        </a>
-        <p class="small mt-2">点击上方按钮在新窗口中打开视频</p>
-    `;
+    console.log(`Searching for video URL mapping for: ${fileName}`);
     
-    // 创建视频ID信息(方便调试)
-    const debugInfo = document.createElement('div');
-    debugInfo.className = 'small text-muted mt-2';
-    debugInfo.innerHTML = `视频名称: ${fileName} | ID: ${fileId}`;
+    // Check if the mapping has data
+    const mappingSize = Object.keys(window.videoFileMapping).length;
+    console.log(`Video mapping contains ${mappingSize} entries`);
     
-    // 添加到容器
-    container.appendChild(directLinkElement);
-    container.appendChild(debugInfo);
+    // Debug: Log the first few entries for inspection
+    if (mappingSize > 0) {
+        const sampleKeys = Object.keys(window.videoFileMapping).slice(0, 3);
+        console.log("Sample mapping entries:", sampleKeys);
+    }
     
-    console.log(`已创建Google Drive直接访问链接: ${fileName}`);
+    let foundUrl = null;
+    
+    // Try exact match first
+    if (window.videoFileMapping[fileName]) {
+        console.log(`Found exact match for ${fileName}`);
+        foundUrl = window.videoFileMapping[fileName];
+    }
+    
+    // Try without .mp4 extension if not found
+    if (!foundUrl) {
+        const baseNameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+        const withExtension = baseNameWithoutExt + '.mp4';
+        
+        if (window.videoFileMapping[withExtension]) {
+            console.log(`Found match for ${fileName} using "${withExtension}"`);
+            foundUrl = window.videoFileMapping[withExtension];
+        }
+    }
+    
+    // Try with different versions of the filename
+    if (!foundUrl) {
+        const baseNameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+        const variations = [
+            fileName,
+            baseNameWithoutExt,
+            baseNameWithoutExt + '.mp4',
+            fileName.toLowerCase(),
+            baseNameWithoutExt.toLowerCase(),
+            (baseNameWithoutExt + '.mp4').toLowerCase()
+        ];
+        
+        for (const variant of variations) {
+            if (window.videoFileMapping[variant]) {
+                console.log(`Found match for ${fileName} using variant "${variant}"`);
+                foundUrl = window.videoFileMapping[variant];
+                break;
+            }
+        }
+    }
+    
+    // If URL is found, optimize it for public access
+    if (foundUrl) {
+        foundUrl = optimizeCloudinaryUrl(foundUrl);
+        return foundUrl;
+    }
+    
+    // No matching URL found
+    console.warn(`No Cloudinary URL found for video ${fileName} after trying all variations`);
+    return null;
 }
 
-// 显示视频错误消息
+// New function to optimize Cloudinary URLs for public access
+function optimizeCloudinaryUrl(url) {
+    if (!url || !url.includes('cloudinary')) return url;
+    
+    // Parse the URL to separate parts
+    try {
+        // Check if the URL already has parameters
+        if (url.includes('/upload/')) {
+            // Add delivery optimization parameters
+            url = url.replace('/upload/', '/upload/f_auto,q_auto,fl_progressive/');
+            console.log(`Optimized Cloudinary URL: ${url}`);
+        }
+        
+        // Ensure URL uses HTTPS
+        if (url.startsWith('http:')) {
+            url = url.replace('http:', 'https:');
+        }
+        
+        return url;
+    } catch (e) {
+        console.error("Error optimizing Cloudinary URL:", e);
+        return url; // Return original URL if there's an error
+    }
+}
+
+// Fall back to local path loading
+function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
+    // Try multiple possible local paths
+    const questionId = fileName.replace('.mp4', '');
+    const videoPaths = [
+        `video_clips/${fileName}`,
+        `videos/${fileName}`,
+        `video_clips/${questionId}.mp4`,
+        `videos/${questionId}.mp4`
+    ];
+    
+    console.log(`Trying to load from local path: ${videoPaths[0]}`);
+    
+    // SIMPLIFIED CONTAINER STRUCTURE - create video directly in wrapper
+    container.innerHTML = `
+        <video
+            id="direct-video-player"
+            width="100%"
+            height="350px"
+            controls
+            controlsList="nodownload"
+            crossorigin="anonymous"
+            playsinline
+            style="display: block; margin: 0 auto; border-radius: 4px; max-width: 100%;">
+            <source src="${videoPaths[0]}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    `;
+    
+    // Get the video element
+    const videoElement = container.querySelector('video');
+    
+    // Add error handling
+    videoElement.addEventListener('error', function(e) {
+        console.error("Local video loading error:", e);
+        
+        // If local loading fails, try Google Drive
+        const fileId = getFileIdFromName(fileName);
+        if (fileId) {
+            console.log(`Local loading failed, trying to load from Google Drive: ${fileName}, ID: ${fileId}`);
+            tryLoadFromGoogleDrive(container, fileId, fileName);
+        } else {
+            // Display error message
+            showVideoErrorMessage(videoWrapper, fileName);
+        }
+    });
+    
+    // Add success handler
+    videoElement.addEventListener('canplay', function() {
+        console.log(`Video ${fileName} successfully loaded from local source!`);
+    });
+    
+    // Load video
+    videoElement.load();
+}
+
+// Get file ID from filename using the video mapping
+function getFileIdFromName(fileName) {
+    // Extract base filename without path and extension
+    const baseFileName = fileName.replace(/^.*[\\\/]/, '');
+    const baseNameWithoutExt = baseFileName.replace(/\.[^/.]+$/, '');
+    
+    // Check all possible variations for match in videoFileMapping
+    const possibleKeys = [
+        baseFileName,
+        baseNameWithoutExt,
+        baseFileName + '.mp4',
+        baseNameWithoutExt + '.mp4'
+    ];
+    
+    // Try all possible keys
+    for (const key of possibleKeys) {
+        if (window.videoFileMapping && window.videoFileMapping[key]) {
+            console.log(`Found Cloudinary URL for ${key}`);
+            return window.videoFileMapping[key];
+        }
+    }
+    
+    // No matching URL found
+    console.warn(`No Cloudinary URL found for video ${baseFileName}`);
+    return null;
+}
+
+// Display video error message
 function showVideoErrorMessage(videoWrapper, fileName) {
     if (!videoWrapper) return;
     
-    // 检查错误消息是否已显示
+    // Check if error message is already displayed
     if (videoWrapper.querySelector('.alert-warning')) return;
     
     const errorMessage = document.createElement('div');
     errorMessage.className = 'alert alert-warning mt-2';
     errorMessage.innerHTML = `
-        <strong>无法加载视频</strong><br>
-        <p>请尝试以下方法访问视频 "${fileName}":</p>
+        <strong>Unable to load video</strong><br>
+        <p>Please try the following methods to access video "${fileName}":</p>
         <ol>
-            <li>刷新页面再试一次</li>
-            <li>
-                <a href="https://drive.google.com/drive/folders/${DRIVE_FOLDER_ID}" 
-                   target="_blank" class="btn btn-sm btn-outline-primary my-2">
-                   打开Google Drive文件夹
-                </a>
-                <span class="ml-2">在文件夹中找到并播放视频</span>
-            </li>
-            <li>检查视频文件是否已正确放置在本地服务器的video_clips或videos文件夹中</li>
+            <li>Refresh the page and try again</li>
+            <li>Check if the video file is correctly configured in Cloudinary</li>
+            <li>Check if the video file is correctly placed in the video_clips or videos folder on the local server</li>
         </ol>
-        <p class="mt-2">您可以继续评估其他问题，稍后再回来处理这个视频。</p>
+        <p class="mt-2">You can continue evaluating other questions and come back to this video later.</p>
     `;
     videoWrapper.appendChild(errorMessage);
 }
 
-// Generate a direct link from Google Drive file ID
-function getGoogleDriveDirectLink(fileId) {
-    // 使用多种不同的URL格式，增加视频加载成功的机会
-    // 方法1: 使用exportDownload参数 (可能更可靠)
-    const exportDownloadUrl = `https://drive.google.com/uc?export=download&confirm=yep&id=${fileId}`;
+// Load video from Google Drive (kept for fallback compatibility)
+function tryLoadFromGoogleDrive(container, fileId, fileName) {
+    if (!container) return;
     
-    // 方法2: 使用简单链接，但添加特殊参数
-    const simpleUrl = `https://docs.google.com/uc?id=${fileId}&export=download&confirm=t&uuid=${Date.now()}`;
-    
-    // 使用哪种链接格式取决于尝试次数
-    let directUrl;
-    
-    // 根据尝试次数在不同链接类型之间轮换
-    const attempt = Math.floor(Math.random() * 2); // 0 或 1
-    
-    if (attempt === 0) {
-        directUrl = exportDownloadUrl;
-        console.log("Using export download URL format");
-    } else {
-        directUrl = simpleUrl;
-        console.log("Using simple URL format with UUID");
+    // If fileId is actually a Cloudinary URL (from getFileIdFromName)
+    if (fileId.startsWith('http')) {
+        // Create video element
+        const videoElement = document.createElement('video');
+        videoElement.id = 'direct-video-player';
+        videoElement.width = "100%";
+        videoElement.height = "350px";
+        videoElement.controls = true;
+        videoElement.controlsList = "nodownload";
+        videoElement.preload = "auto";
+        videoElement.style.backgroundColor = "#000";
+        
+        // Create source element
+        const source = document.createElement('source');
+        source.type = "video/mp4";
+        source.src = fileId; // The URL from Cloudinary
+        videoElement.appendChild(source);
+        
+        // Add error handling
+        videoElement.addEventListener('error', function(e) {
+            console.error("Cloudinary video loading error:", e);
+            showFallbackMessage(container, fileName);
+        });
+        
+        // Add success handler
+        videoElement.addEventListener('canplay', function() {
+            console.log(`Video ${fileName} successfully loaded from Cloudinary!`);
+        });
+        
+        // Add video element to container
+        container.appendChild(videoElement);
+        
+        // Load video
+        videoElement.load();
+        return;
     }
     
-    // 如果需要代理，路由通过代理
-    if (USE_CORS_PROXY) {
-        return CORS_PROXY_URL + encodeURIComponent(directUrl);
-    } else {
-        return directUrl;
-    }
+    // If no valid URL, show fallback message
+    showFallbackMessage(container, fileName);
 }
 
-// Convert question ID to standardized filename
+// Show fallback message when all video loading methods fail
+function showFallbackMessage(container, fileName) {
+    // Clear container first to remove any potential extra elements
+    container.innerHTML = '';
+    
+    // Add a black placeholder with play icon as a visual fallback
+    const placeholderContainer = document.createElement('div');
+    placeholderContainer.style.width = '100%';
+    placeholderContainer.style.height = '350px';
+    placeholderContainer.style.backgroundColor = '#000';
+    placeholderContainer.style.display = 'flex';
+    placeholderContainer.style.alignItems = 'center';
+    placeholderContainer.style.justifyContent = 'center';
+    placeholderContainer.style.borderRadius = '5px';
+    placeholderContainer.style.marginBottom = '15px';
+    
+    // Add a play icon to make it look like a video
+    placeholderContainer.innerHTML = `
+        <div style="color: white; text-align: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-play-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445z"/>
+            </svg>
+            <p style="margin-top: 15px;">Video preview unavailable</p>
+        </div>
+    `;
+    
+    // Create fallback message
+    const fallbackElement = document.createElement('div');
+    fallbackElement.className = 'alert alert-warning mt-3 mb-3';
+    fallbackElement.innerHTML = `
+        <strong>Unable to load video: ${fileName}</strong>
+        <p>The video could not be loaded from any source. Please try refreshing the page or contact support.</p>
+    `;
+    
+    // Add to container
+    container.appendChild(placeholderContainer);
+    container.appendChild(fallbackElement);
+    
+    console.log(`Failed to load video: ${fileName} from all sources`);
+}
+
+// Standardize file name
 function getStandardizedFileName(questionId) {
     return `${questionId}.mp4`;
 }
-
-// Get file ID from name using local cache or mapping
-function getFileIdFromName(fileName) {
-    // First try direct match
-    if (window.videoFileMapping && window.videoFileMapping[fileName]) {
-        console.log(`Found exact match for ${fileName} in mapping`);
-        return window.videoFileMapping[fileName];
-    }
-    
-    // Try different formats (if filename contains .mp4)
-    if (fileName.endsWith('.mp4') && window.videoFileMapping) {
-        // Try without extension
-        const nameWithoutExt = fileName.replace('.mp4', '');
-        if (window.videoFileMapping[nameWithoutExt]) {
-            console.log(`Found match for ${fileName} without extension`);
-            return window.videoFileMapping[nameWithoutExt];
-        }
-        
-        // Try adding extension
-        const nameWithExt = fileName.includes('.mp4') ? fileName : fileName + '.mp4';
-        if (window.videoFileMapping[nameWithExt]) {
-            console.log(`Found match for ${fileName} with extension`);
-            return window.videoFileMapping[nameWithExt];
-        }
-    }
-    
-    // Try current domain combination
-    if (currentDomain && window.videoFileMapping) {
-        const domainFile = `${currentDomain}_${fileName}`;
-        if (window.videoFileMapping[domainFile]) {
-            console.log(`Found match using domain prefix: ${domainFile}`);
-            return window.videoFileMapping[domainFile];
-        }
-        
-        // Try without .mp4
-        const domainFileNoExt = `${currentDomain}_${fileName.replace('.mp4', '')}`;
-        if (window.videoFileMapping[domainFileNoExt]) {
-            console.log(`Found match using domain prefix without extension: ${domainFileNoExt}`);
-            return window.videoFileMapping[domainFileNoExt];
-        }
-    }
-    
-    // Debug: list all available mappings
-    if (window.videoFileMapping) {
-        console.log("Available video mappings:", Object.keys(window.videoFileMapping).slice(0, 5), "...");
-    } else {
-        console.error("No video mapping available! Make sure video_mapping.js is loaded properly.");
-    }
-    
-    // Warning log
-    console.warn(`Video ID not found in mapping for file: ${fileName}`);
-    return null;
-}
-
-// Generate video mapping from Drive folder
-function generateVideoMapping() {
-  // Replace with your folder ID
-  var folderId = '1Qgzid-OsjrDpb6j5N8v4A78VDviUWSHY';
-  var folder = DriveApp.getFolderById(folderId);
-  var files = folder.getFiles();
-  
-  var mapping = {};
-  while (files.hasNext()) {
-    var file = files.next();
-    mapping[file.getName()] = file.getId();
-  }
-  
-  return JSON.stringify(mapping, null, 2);
-}
-
-function doGet() {
-  var output = "const videoFileMapping = " + generateVideoMapping() + ";";
-  return ContentService.createTextOutput(output)
-    .setMimeType(ContentService.MimeType.JAVASCRIPT);
-} 

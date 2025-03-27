@@ -480,6 +480,54 @@
             margin-bottom: 0.3rem;
             font-size: 0.95rem;
         }
+        
+        /* 添加脉冲动画效果 */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+            }
+        }
+        
+        .btn-pulse {
+            animation: pulse 1.5s infinite;
+            position: relative;
+        }
+        
+        /* 两步流程样式 */
+        .step-indicator {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #0d6efd;
+            color: white;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        
+        .step-active {
+            background-color: #0d6efd;
+            border: 2px solid #0d6efd;
+        }
+        
+        .step-inactive {
+            background-color: #e9ecef;
+            color: #6c757d;
+            border: 2px solid #6c757d;
+        }
+        
+        .step-completed {
+            background-color: #198754;
+            border: 2px solid #198754;
+        }
     </style>
 </head>
 <body>
@@ -492,21 +540,24 @@
             </div>
         </div>
         
+        
         <div class="alert alert-info instructions p-3">
             <p class="mb-2"><strong>Instructions:</strong></p>
             <ol>
                 <li>Watch the video clip carefully</li>
-                <li>Read all options and select the one you believe is correct</li>
-                <li>Click the "Confirm Selection" button to submit your answer</li>
-                <li>After your selection, the ground truth will be revealed. Please assess the sample quality by verifying:
+                <li><strong>Step 1:</strong> Read all options and select the one you believe is correct</li>
+                <li>Click the "<strong>Confirm Selection</strong>" button to submit your answer</li>
+                <li><strong>Step 2:</strong> After your selection, you will see the ground truth. Please complete the quality assessment by:
                     <ul>
-                        <li>Whether the video clearly shows the action described in the ground truth</li>
-                        <li>Whether any other options (besides the ground truth) are also supported by the video</li>
-                        <li>If there are any language issues (grammatically incorrect or illogical options)</li>
+                        <li>Rating the overall quality (good or poor)</li>
+                        <li>Identifying any specific issues with the sample</li>
+                        <li>Adding any comments if needed</li>
                     </ul>
                 </li>
-                <li>Click "Continue" to proceed to the next question</li>
+                <li>Click "<strong>Submit Quality Assessment</strong>" to complete your evaluation</li>
+                <li>Click "<strong>Next</strong>" to proceed to the next question</li>
             </ol>
+            <p class="mt-2 text-danger"><strong>Important:</strong> You must complete <em>both</em> Step 1 (selection) and Step 2 (quality assessment) for each question.</p>
         </div>
         
         <!-- Progress indicator -->
@@ -582,7 +633,7 @@
             <!-- 选项部分 -->
             <div class="options-section">
                 <div id="options-container">
-                    <h5 style="font-size: 1rem; margin-bottom: 0.5rem;">Please select the option you believe is correct:</h5>
+                    <h5 style="font-size: 1rem; margin-bottom: 1rem; line-height: 1.4;">This is a player practicing basketball, here are some expert feedbacks (good execution or tips for improvement). Please select the option you believe is correct:</h5>
                     <div class="options-list">
                         <!-- Options will be inserted here -->
                     </div>
@@ -593,66 +644,12 @@
                 </div>
             </div>
             
-            <div class="mt-4" id="ground-truth-container" style="display: none;">
-                <h5>Ground Truth:</h5>
-                <div class="comment-card" id="ground-truth-text"></div>
-                
-                <div class="feedback-message" id="feedback-message"></div>
-                
-                <div class="filter-container mt-4">
-                    <h5>Sample Quality Assessment:</h5>
-                    <p>Please help us identify any issues with this sample:</p>
-                    
-                    <div class="filter-options">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="filter-groundtruth">
-                            <label class="form-check-label" for="filter-groundtruth">
-                                The video does NOT clearly contain the action described in the ground truth
-                            </label>
-                        </div>
-                        
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="filter-others">
-                            <label class="form-check-label" for="filter-others">
-                                One or more of the other options (not ground truth) ARE also supported by the video
-                            </label>
-                        </div>
-                        
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="filter-language">
-                            <label class="form-check-label" for="filter-language">
-                                There are language issues (grammatically incorrect, illogical, or other language problems)
-                            </label>
-                        </div>
-                        
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="filter-other-issues">
-                            <label class="form-check-label" for="filter-other-issues">
-                                Other issues
-                            </label>
-                        </div>
-                        
-                        <div class="flag-reasons" id="flag-reasons-container">
-                            <label for="flag-reasons" class="form-label">Please specify the issues:</label>
-                            <textarea class="form-control" id="flag-reasons" rows="3" placeholder="Describe what problems you noticed..."></textarea>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3 mt-4">
-                        <label for="comments" class="form-label">Additional Comments (Optional)</label>
-                        <textarea class="form-control" id="comments" placeholder="Any comments about your selection"></textarea>
-                    </div>
-                    
-                    <div class="confirmation-buttons">
-                        <button type="button" id="confirm-filter-btn" class="btn btn-success" onclick="handleConfirmFilterBtnClick(this)">Continue</button>
-                    </div>
-                </div>
-            </div>
+            <!-- 评估部分将通过JavaScript动态生成 -->
         </div>
     </template>
 
-    <!-- 在加载主JS之前加载视频映射文件 -->
-    <script src="video_mapping.js"></script>
+    <!-- Load video mapping with wrapper to ensure global access -->
+    <script src="video_mapping_wrapper.js"></script>
     <script src="domain_questionnaire.js"></script>
 </body>
 </html> 
