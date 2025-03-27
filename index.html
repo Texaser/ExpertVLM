@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Technique Evaluation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script>
         localStorage.clear();
         console.log("localStorage cleared");
@@ -13,157 +13,162 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            padding-bottom: 2rem;
             background-color: #f8f9fa;
         }
-        .video-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            height: 0;
-            margin-bottom: 20px;
-            background-color: #000;
+        
+        .container {
+            max-width: 800px;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
             border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .video-container video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        .comment-card {
-            margin-bottom: 15px;
-            border-left: 4px solid #28a745;
-            padding: 15px;
-            background-color: #fff;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .negative-comment {
-            border-left: 4px solid #dc3545;
-        }
-        h3 {
-            margin-top: 30px;
-            color: #444;
-            font-weight: 600;
-        }
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-            border-radius: 6px;
-            border: 1px solid #ced4da;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
-        }
-        .questionnaire-section {
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
-        }
-        .btn-primary {
-            background-color: #4a6baf;
-            border-color: #4a6baf;
-        }
-        .btn-primary:hover {
-            background-color: #3a5a9f;
-            border-color: #3a5a9f;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #3a5a9f;
-            font-weight: 700;
-        }
-        .instructions {
-            margin-bottom: 30px;
-        }
-        .option-card {
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 15px;
-            margin-bottom: 10px;
-        }
-        .option-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .option-card.selected {
-            background-color: #e7f0fd;
-            border-color: #4a6baf;
-            border-left: 4px solid #4a6baf;
-        }
-        .option-card.selected .check-icon {
-            display: inline-block;
-        }
-        .check-icon {
-            display: none;
-            color: #4a6baf;
-            float: right;
-        }
-        .video-item {
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        .progress-bar {
-            height: 8px;
-        }
-        .navigation-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-        }
-        #submission-form {
-            margin-top: 30px;
             padding: 20px;
-            background-color: #f0f4f8;
-            border-radius: 8px;
+            margin-top: 20px;
         }
-        .form-control:focus {
-            border-color: #4a6baf;
-            box-shadow: 0 0 0 0.25rem rgba(74, 107, 175, 0.25);
+        
+        .header {
+            padding: 1.5rem 0;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .domain-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .domain-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #0d6efd;
+        }
+        
+        .domain-title {
+            font-size: 1.25rem;
+            color: #0d6efd;
+            margin-bottom: 0.5rem;
+        }
+        
+        .domain-description {
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        
+        .domain-count {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        
+        .btn-primary {
+            padding: 0.5rem 1.5rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="text-center py-5">
-            <h1>Guitar Technique Evaluation Study</h1>
-            <p class="lead">Thank you for participating in our research project. Please choose one of the following test methods:</p>
-            
-            <div class="row mt-5 justify-content-center">
-                <div class="col-md-5 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">Video Version</h3>
-                            <p class="card-text">Watch videos and evaluate feedback quality</p>
-                            <a href="video_questionnaire.html" class="btn btn-primary">Start Video Evaluation</a>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-5 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body text-center">
-                            <h3 class="card-title">Text Version</h3>
-                            <p class="card-text">Read scenarios and select the most accurate feedback option</p>
-                            <a href="text_questionnaire.html" class="btn btn-success">Start Text Evaluation</a>
-                        </div>
-                    </div>
+        <div class="header">
+            <h1>Expert Commentary Evaluation</h1>
+            <p class="lead">Please select a domain to start the video evaluation</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Basketball</div>
+                    <div class="domain-description">Basketball training and techniques</div>
+                    <a href="basketball_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
                 </div>
             </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Bike</div>
+                    <div class="domain-description">Biking and cycling techniques</div>
+                    <a href="bike_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Bouldering</div>
+                    <div class="domain-description">Rock climbing and bouldering techniques</div>
+                    <a href="bouldering_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Cooking</div>
+                    <div class="domain-description">Cooking and food preparation techniques</div>
+                    <a href="cooking_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">COVID</div>
+                    <div class="domain-description">COVID-19 testing procedures</div>
+                    <a href="covid_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">CPR</div>
+                    <div class="domain-description">CPR and first aid techniques</div>
+                    <a href="cpr_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Dance</div>
+                    <div class="domain-description">Dancing techniques and routines</div>
+                    <a href="dance_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Guitar</div>
+                    <div class="domain-description">Guitar playing techniques</div>
+                    <a href="guitar_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Piano</div>
+                    <div class="domain-description">Piano playing techniques</div>
+                    <a href="piano_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Soccer</div>
+                    <div class="domain-description">Soccer playing techniques</div>
+                    <a href="soccer_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="domain-card">
+                    <div class="domain-title">Violin</div>
+                    <div class="domain-description">Violin playing techniques</div>
+                    <a href="violin_questionnaire.html" class="btn btn-primary">Start Evaluation</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <p class="small text-muted">Each domain includes both general explanations and specific tips</p>
         </div>
     </div>
 
