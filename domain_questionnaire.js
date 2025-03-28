@@ -1462,11 +1462,11 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
     // Extract base filename without path
     const baseFileName = fileName.replace(/^.*[\\\/]/, '');
     
-    // First try loading from Cloudinary using video_mapping.js
-    const cloudinaryUrl = getCloudinaryUrl(baseFileName);
+    // First try loading from Amazon S3 using video_mapping.js
+    const s3Url = getVideoUrlFromMapping(baseFileName);
     
-    if (cloudinaryUrl && videoWrapper) {
-        console.log(`Found Cloudinary URL for ${baseFileName}: ${cloudinaryUrl}`);
+    if (s3Url && videoWrapper) {
+        console.log(`Found Amazon S3 URL for ${baseFileName}: ${s3Url}`);
         
         // Clear existing content from video container
         while (videoWrapper.firstChild) {
@@ -1485,7 +1485,7 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
                     crossorigin="anonymous" 
                     playsinline 
                     style="display: block; margin: 0 auto; border-radius: 4px; max-width: 100%;">
-                    <source src="${cloudinaryUrl}" type="video/mp4">
+                    <source src="${s3Url}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
                 <div class="video-loading" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.5); color: white; z-index: 5;">
@@ -1537,7 +1537,7 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
         
         // Add error handling
         videoElement.addEventListener('error', function(e) {
-            console.error("Video loading error with Cloudinary:", e);
+            console.error("Video loading error with Amazon S3:", e);
             console.error("Error code:", videoElement.error ? videoElement.error.code : "unknown");
             console.error("Error message:", videoElement.error ? videoElement.error.message : "unknown");
             
@@ -1547,7 +1547,7 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
             // Add visible error message to page
             const errorMsg = document.createElement('div');
             errorMsg.className = "alert alert-danger mt-2";
-            errorMsg.innerHTML = `<strong>Error loading video from Cloudinary:</strong> ${videoElement.error ? videoElement.error.message : "Unknown error"}`;
+            errorMsg.innerHTML = `<strong>Error loading video from Amazon S3:</strong> ${videoElement.error ? videoElement.error.message : "Unknown error"}`;
             videoWrapper.appendChild(errorMsg);
             
             // Fall back to local video loading after a short delay
@@ -1558,7 +1558,7 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
         
         // Add success handler
         videoElement.addEventListener('canplay', function() {
-            console.log(`Video ${fileName} successfully loaded from Cloudinary!`);
+            console.log(`Video ${fileName} successfully loaded from Amazon S3!`);
             
             // Hide loading overlay
             if (loadingOverlay) loadingOverlay.style.display = 'none';
@@ -1571,8 +1571,8 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
         videoElement.load();
         return;
     } else {
-        console.log(`No Cloudinary URL found for ${baseFileName}, trying local paths`);
-        // Fall back to local paths if no Cloudinary URL found
+        console.log(`No Amazon S3 URL found for ${baseFileName}, trying local paths`);
+        // Fall back to local paths if no Amazon S3 URL found
         if (videoWrapper) {
             // Clear existing content if any
             while (videoWrapper.firstChild) {
@@ -1584,8 +1584,8 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
     }
 }
 
-// Helper function to get Cloudinary URL from video_mapping.js
-function getCloudinaryUrl(fileName) {
+// Helper function to get URL from video_mapping.js
+function getVideoUrlFromMapping(fileName) {
     // Check if video_mapping.js is loaded and accessible
     if (typeof window.videoFileMapping === 'undefined') {
         console.error("Video mapping is not available: window.videoFileMapping is undefined");
@@ -1645,40 +1645,14 @@ function getCloudinaryUrl(fileName) {
         }
     }
     
-    // If URL is found, optimize it for public access
+    // If URL is found, use it directly (no optimization needed for Amazon S3)
     if (foundUrl) {
-        foundUrl = optimizeCloudinaryUrl(foundUrl);
         return foundUrl;
     }
     
     // No matching URL found
-    console.warn(`No Cloudinary URL found for video ${fileName} after trying all variations`);
+    console.warn(`No Amazon S3 URL found for video ${fileName} after trying all variations`);
     return null;
-}
-
-// New function to optimize Cloudinary URLs for public access
-function optimizeCloudinaryUrl(url) {
-    if (!url || !url.includes('cloudinary')) return url;
-    
-    // Parse the URL to separate parts
-    try {
-        // Check if the URL already has parameters
-        if (url.includes('/upload/')) {
-            // Add delivery optimization parameters
-            url = url.replace('/upload/', '/upload/f_auto,q_auto,fl_progressive/');
-            console.log(`Optimized Cloudinary URL: ${url}`);
-        }
-        
-        // Ensure URL uses HTTPS
-        if (url.startsWith('http:')) {
-            url = url.replace('http:', 'https:');
-        }
-        
-        return url;
-    } catch (e) {
-        console.error("Error optimizing Cloudinary URL:", e);
-        return url; // Return original URL if there's an error
-    }
 }
 
 // Fall back to local path loading
@@ -1786,13 +1760,13 @@ function getFileIdFromName(fileName) {
     // Try all possible keys
     for (const key of possibleKeys) {
         if (window.videoFileMapping && window.videoFileMapping[key]) {
-            console.log(`Found Cloudinary URL for ${key}`);
+            console.log(`Found Amazon S3 URL for ${key}`);
             return window.videoFileMapping[key];
         }
     }
     
     // No matching URL found
-    console.warn(`No Cloudinary URL found for video ${baseFileName}`);
+    console.warn(`No Amazon S3 URL found for video ${baseFileName}`);
     return null;
 }
 
@@ -1810,7 +1784,7 @@ function showVideoErrorMessage(videoWrapper, fileName) {
         <p>Please try the following methods to access video "${fileName}":</p>
         <ol>
             <li>Refresh the page and try again</li>
-            <li>Check if the video file is correctly configured in Cloudinary</li>
+            <li>Check if the video file is correctly configured in Amazon S3</li>
             <li>Check if the video file is correctly placed in the video_clips or videos folder on the local server</li>
         </ol>
         <p class="mt-2">You can continue evaluating other questions and come back to this video later.</p>
@@ -1822,7 +1796,7 @@ function showVideoErrorMessage(videoWrapper, fileName) {
 function tryLoadFromGoogleDrive(container, fileId, fileName) {
     if (!container) return;
     
-    // If fileId is actually a Cloudinary URL (from getFileIdFromName)
+    // If fileId is actually an Amazon S3 URL (from getFileIdFromName)
     if (fileId.startsWith('http')) {
         // Create video element
         const videoElement = document.createElement('video');
@@ -1837,18 +1811,18 @@ function tryLoadFromGoogleDrive(container, fileId, fileName) {
         // Create source element
         const source = document.createElement('source');
         source.type = "video/mp4";
-        source.src = fileId; // The URL from Cloudinary
+        source.src = fileId; // The URL from Amazon S3
         videoElement.appendChild(source);
         
         // Add error handling
         videoElement.addEventListener('error', function(e) {
-            console.error("Cloudinary video loading error:", e);
+            console.error("Amazon S3 video loading error:", e);
             showFallbackMessage(container, fileName);
         });
         
         // Add success handler
         videoElement.addEventListener('canplay', function() {
-            console.log(`Video ${fileName} successfully loaded from Cloudinary!`);
+            console.log(`Video ${fileName} successfully loaded from Amazon S3!`);
         });
         
         // Add video element to container
