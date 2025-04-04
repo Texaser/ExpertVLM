@@ -121,7 +121,7 @@ function generateUUID() {
 // Load domain-specific questions
 async function loadQuestions() {
     try {
-        const response = await fetch('filtered_all_questionnaire_data_enriched.json');
+        const response = await fetch('additional_samples/filtered_unique_additional_questionnaire_data.json');
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -257,8 +257,10 @@ function optimizeVideoPlayback() {
 // Preload next video
 function preloadNextVideo(nextIndex) {
     if (nextIndex < questions.length) {
-        const nextQuestionId = questions[nextIndex].id;
-        const videoPath = `video_clips/${nextQuestionId}.mp4`;
+        const nextQuestion = questions[nextIndex];
+        const nextQuestionId = nextQuestion.id;
+        const nextVideoTime = nextQuestion.video_time || 'unknown';
+        const videoPath = `additional_video_clips/${nextQuestionId}_${nextVideoTime}.mp4`;
         
         // Check if already preloaded
         if (!preloadedVideos[nextQuestionId]) {
@@ -463,7 +465,7 @@ function renderQuestion(index) {
         // Capitalize first letter of domain name
         const formattedDomain = domainName.charAt(0).toUpperCase() + domainName.slice(1).toLowerCase();
         const feedbackType = question.is_ge ? "good execution" : "tips for improvement";
-        descriptionText.textContent = `This is a player practicing ${formattedDomain.toLowerCase()}, here are some expert feedbacks (${feedbackType}). Please select the option you believe is correct:`;
+        descriptionText.textContent = `This is a participant practicing ${formattedDomain.toLowerCase()}, here are some expert feedbacks (${feedbackType}). Please select the option you believe is correct:`;
     }
     
     // Create option elements
@@ -1659,11 +1661,25 @@ function getVideoUrlFromMapping(fileName) {
 function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
     // Try multiple possible local paths
     const questionId = fileName.replace('.mp4', '');
+    
+    // 提取questionId和video_time
+    let videoId = questionId;
+    let videoTime = 'unknown';
+    
+    // 如果文件名已经包含下划线，尝试分割出video_time
+    if (questionId.includes('_')) {
+        const parts = questionId.split('_');
+        // 假设最后一部分是video_time
+        videoTime = parts[parts.length - 1];
+        // 前面的部分组成videoId
+        videoId = parts.slice(0, -1).join('_');
+    }
+    
     const videoPaths = [
-        `video_clips/${fileName}`,
-        `videos/${fileName}`,
-        `video_clips/${questionId}.mp4`,
-        `videos/${questionId}.mp4`
+        `additional_video_clips/${fileName}`,
+        `additional_video_clips/${questionId}.mp4`,
+        `additional_video_clips/${videoId}_${videoTime}.mp4`,
+        `additional_video_clips/${videoId.toLowerCase()}_${videoTime}.mp4`
     ];
     
     console.log(`Trying to load from local path: ${videoPaths[0]}`);
@@ -1881,5 +1897,11 @@ function showFallbackMessage(container, fileName) {
 
 // Standardize file name
 function getStandardizedFileName(questionId) {
+    // 检查问题数据是否可用
+    const question = questions[currentQuestionIndex];
+    if (question) {
+        const videoTime = question.video_time || 'unknown';
+        return `${questionId}_${videoTime}.mp4`;
+    }
     return `${questionId}.mp4`;
 }

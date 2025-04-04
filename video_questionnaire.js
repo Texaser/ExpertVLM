@@ -163,8 +163,10 @@ function optimizeVideoPlayback() {
 // Preload next video
 function preloadNextVideo(nextIndex) {
     if (nextIndex < questions.length) {
-        const nextQuestionId = questions[nextIndex].id;
-        const videoPath = `video_clips/${nextQuestionId}.mp4`;
+        const nextQuestion = questions[nextIndex];
+        const nextQuestionId = nextQuestion.id;
+        const nextVideoTime = nextQuestion.video_time || 'unknown';
+        const videoPath = `additional_video_clips/${nextQuestionId}_${nextVideoTime}.mp4`;
         
         // Check if already preloaded
         if (!preloadedVideos[nextQuestionId]) {
@@ -290,12 +292,14 @@ function renderQuestion(index) {
     const videoPlayer = questionElement.querySelector('#video-player');
     const videoSource = questionElement.querySelector('source');
     
+    // 构建视频文件路径，使用id和video_time
+    const videoTime = question.video_time || 'unknown';
+    const videoPath = `additional_video_clips/${question.id}_${videoTime}.mp4`;
+    
     // Try multiple possible video paths
     const videoPaths = [
-        `video_clips/${question.id}.mp4`,
-        `videos/${question.id}.mp4`,
-        `video_clips/${question.id.toLowerCase()}.mp4`,
-        `videos/${question.id.toLowerCase()}.mp4`
+        videoPath,  // 主路径
+        `additional_video_clips/${question.id.toLowerCase()}_${videoTime}.mp4`  // 备用路径（小写ID）
     ];
     
     // Function to try loading from each path
