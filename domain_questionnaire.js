@@ -127,22 +127,40 @@ async function loadQuestions() {
         }
         const allData = await response.json();
         
-        // Remove test mode limitation for basketball
-        // const isTestMode = currentDomain === "basketball";
-        // const sampleLimit = isTestMode ? 10 : 9999;
-        
         // If current domain is set, filter relevant questions
         if (currentDomain) {
             let filteredData = allData.filter(q => q.domain === currentDomain);
             
-            // Remove the sample limit code
-            // Only limit the number of samples in basketball test mode
-            // if (isTestMode) {
-            //     console.log(`Test mode: Loading only ${sampleLimit} basketball samples`);
-            //     filteredData = filteredData.slice(0, sampleLimit);
-            // }
+            // Define number of partitions for each domain
+            const domainPartitions = {
+                "basketball": 3,
+                "bouldering": 2,
+                "cooking": 2,
+                "dance": 2,
+                // Add other domains as needed
+            };
             
-            console.log(`Loaded ${filteredData.length} questions for domain: ${currentDomain}`);
+            // Get number of partitions for current domain
+            const numPartitions = domainPartitions[currentDomain] || 1;
+            
+            // Check if partition number is set and valid for this domain
+            if (window.partitionNumber && window.partitionNumber <= numPartitions) {
+                console.log(`Partition mode: Loading partition ${window.partitionNumber} of ${numPartitions} for ${currentDomain}`);
+                const totalCount = filteredData.length;
+                const partitionSize = Math.ceil(totalCount / numPartitions);
+                
+                // Calculate start and end indices for the partition
+                const startIndex = (window.partitionNumber - 1) * partitionSize;
+                const endIndex = Math.min(window.partitionNumber * partitionSize, totalCount);
+                
+                // Filter data for the current partition
+                filteredData = filteredData.slice(startIndex, endIndex);
+                
+                console.log(`Loaded ${filteredData.length} questions for domain: ${currentDomain} (Partition ${window.partitionNumber}/${numPartitions}, questions ${startIndex+1}-${endIndex} of ${totalCount})`);
+            } else {
+                console.log(`Loaded ${filteredData.length} questions for domain: ${currentDomain} (all partitions)`);
+            }
+            
             return filteredData;
         } else {
             console.log(`Loaded all ${allData.length} questions (no domain filter)`);
@@ -260,7 +278,7 @@ function preloadNextVideo(nextIndex) {
         const nextQuestion = questions[nextIndex];
         const nextQuestionId = nextQuestion.id;
         const nextVideoTime = nextQuestion.video_time || 'unknown';
-        const videoPath = `additional_video_clips/${nextQuestionId}_${nextVideoTime}.mp4`;
+        const videoPath = `additional_video_clips/${nextQuestionId}.mp4`;
         
         // Check if already preloaded
         if (!preloadedVideos[nextQuestionId]) {
@@ -1678,8 +1696,8 @@ function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
     const videoPaths = [
         `additional_video_clips/${fileName}`,
         `additional_video_clips/${questionId}.mp4`,
-        `additional_video_clips/${videoId}_${videoTime}.mp4`,
-        `additional_video_clips/${videoId.toLowerCase()}_${videoTime}.mp4`
+        `additional_video_clips/${videoId}.mp4`,
+        `additional_video_clips/${videoId.toLowerCase()}.mp4`
     ];
     
     console.log(`Trying to load from local path: ${videoPaths[0]}`);
@@ -1901,7 +1919,7 @@ function getStandardizedFileName(questionId) {
     const question = questions[currentQuestionIndex];
     if (question) {
         const videoTime = question.video_time || 'unknown';
-        return `${questionId}_${videoTime}.mp4`;
+        return `${questionId}.mp4`;
     }
     return `${questionId}.mp4`;
 }
