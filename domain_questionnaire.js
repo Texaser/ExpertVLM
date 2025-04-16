@@ -23,7 +23,7 @@ const MAX_LOAD_ATTEMPTS = 3;
 
 // DOM elements
 const videoContainer = document.getElementById('video-container');
-const prevBtn = document.getElementById('prev-btn');
+// const prevBtn = document.getElementById('prev-btn'); // 不再需要Previous按钮
 const nextBtn = document.getElementById('next-btn');
 const progressBar = document.getElementById('progress-bar');
 const progressCount = document.getElementById('progress-count');
@@ -34,8 +34,9 @@ const submissionForm = document.getElementById('submission-form');
 const submitAllBtn = document.getElementById('submit-all-btn');
 const submissionSuccess = document.getElementById('submission-success');
 
-// Get current domain
+// Get current domain and part
 const currentDomain = window.currentDomain || "";
+const currentPart = window.partitionNumber || ""; // 修改：使用partitionNumber代替currentPart
 
 // Function to shuffle array elements (Fisher-Yates algorithm)
 function shuffleArray(array) {
@@ -81,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
     // Add event listeners
-    prevBtn.addEventListener('click', goToPreviousQuestion);
+    // 移除 prevBtn.addEventListener('click', goToPreviousQuestion); 
     nextBtn.addEventListener('click', goToNextQuestion);
     submitAllBtn.addEventListener('click', submitAllResponses);
     
@@ -174,15 +175,26 @@ async function loadQuestions() {
 
 // Load user responses from localStorage if available
 function loadUserResponses() {
-    const storedKey = currentDomain ? `videoResponses_${currentDomain}_${userSessionId}` : `videoResponses_${userSessionId}`;
+    const storedKey = currentPart ? 
+        `videoResponses_${currentDomain}_part${currentPart}_${userSessionId}` : 
+        `videoResponses_${currentDomain}_${userSessionId}`;
+    
+    const positionKey = currentPart ?
+        `videoPosition_${currentDomain}_part${currentPart}_${userSessionId}` :
+        `videoPosition_${currentDomain}_${userSessionId}`;
+    
+    // Always initialize userResponses to empty array before loading
+    userResponses = [];
+    currentQuestionIndex = 0;
+    
     const savedResponses = localStorage.getItem(storedKey);
     
     if (savedResponses) {
         try {
             userResponses = JSON.parse(savedResponses);
             
-            // If we have a saved position, restore it
-            const savedPosition = localStorage.getItem(`videoPosition_${currentDomain}_${userSessionId}`);
+            // Get the saved position
+            const savedPosition = localStorage.getItem(positionKey);
             if (savedPosition) {
                 currentQuestionIndex = parseInt(savedPosition, 10);
                 // Ensure currentQuestionIndex is within valid range
@@ -369,8 +381,13 @@ function scheduleAutoSave() {
 
 // Save user responses to localStorage
 function saveUserResponses(isAutoSave = false) {
-    const storedKey = currentDomain ? `videoResponses_${currentDomain}_${userSessionId}` : `videoResponses_${userSessionId}`;
-    const positionKey = currentDomain ? `videoPosition_${currentDomain}_${userSessionId}` : `videoPosition_${userSessionId}`;
+    const storedKey = currentPart ? 
+        `videoResponses_${currentDomain}_part${currentPart}_${userSessionId}` : 
+        `videoResponses_${currentDomain}_${userSessionId}`;
+    
+    const positionKey = currentPart ?
+        `videoPosition_${currentDomain}_part${currentPart}_${userSessionId}` :
+        `videoPosition_${currentDomain}_${userSessionId}`;
     
     localStorage.setItem(storedKey, JSON.stringify(userResponses));
     localStorage.setItem(positionKey, currentQuestionIndex.toString());
@@ -755,19 +772,6 @@ function updateProgressBar() {
     document.getElementById('progress-count').textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
 }
 
-// Go to the previous question
-function goToPreviousQuestion() {
-    if (currentQuestionIndex > 0) {
-        currentQuestionIndex--;
-        renderQuestion(currentQuestionIndex);
-        updateNavigationButtons();
-        updateProgressBar();
-        
-        // Ensure button state is correct when returning to previous question
-        setTimeout(ensureQuestionButtonState, 100); // Give DOM time to update
-    }
-}
-
 // Go to the next question
 function goToNextQuestion() {
     // Check if the current question has been fully answered
@@ -854,7 +858,6 @@ function goToNextQuestion() {
     } else {
         // Show submission form
         videoContainer.style.display = 'none';
-        prevBtn.style.display = 'none';
         nextBtn.style.display = 'none';
         submissionForm.style.display = 'block';
     }
@@ -862,9 +865,7 @@ function goToNextQuestion() {
 
 // Update navigation buttons' state
 function updateNavigationButtons() {
-    prevBtn.disabled = currentQuestionIndex === 0;
-    // Remove auto-disabling logic for the Next button on the last question
-    // nextBtn.disabled = currentQuestionIndex === questions.length - 1;
+    // 不再处理prevBtn: prevBtn.disabled = currentQuestionIndex === 0;
     
     // Update next button text
     nextBtn.textContent = (currentQuestionIndex === questions.length - 1) ? 'Finish' : 'Next';
@@ -1482,6 +1483,10 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
     // Extract base filename without path
     const baseFileName = fileName.replace(/^.*[\\\/]/, '');
     
+    // Check if this is Safari browser
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    console.log(`Browser detection - Safari: ${isSafari}`);
+    
     // First try loading from Amazon S3 using video_mapping.js
     const s3Url = getVideoUrlFromMapping(baseFileName);
     
@@ -1493,7 +1498,7 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
             videoWrapper.removeChild(videoWrapper.firstChild);
         }
         
-        // SIMPLIFIED VIDEO CONTAINER - remove nested backgrounds that create the black box
+        // SIMPLIFIED VIDEO CONTAINER with Safari-specific optimizations
         videoWrapper.innerHTML = `
             <div class="video-player-wrapper" style="position: relative; width: 100%; max-width: 800px; margin: 0 auto;">
                 <video 
@@ -1504,6 +1509,7 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
                     controlsList="nodownload" 
                     crossorigin="anonymous" 
                     playsinline 
+                    ${isSafari ? 'webkit-playsinline' : ''} 
                     style="display: block; margin: 0 auto; border-radius: 4px; max-width: 100%;">
                     <source src="${s3Url}" type="video/mp4">
                     Your browser does not support the video tag.
@@ -1522,6 +1528,27 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
         // Get the video element and add event listeners
         const videoElement = videoWrapper.querySelector('video');
         const loadingOverlay = videoWrapper.querySelector('.video-loading');
+        
+        // Safari-specific optimization
+        if (isSafari) {
+            // 为Safari添加metadata预加载
+            videoElement.preload = "metadata";
+            
+            // 如果Safari重试次数超过1，尝试使用不同的加载方式
+            if (videoLoadAttempts[fileName] > 1) {
+                console.log("Safari retry: Using alternative video loading method");
+                
+                // 添加load事件监听
+                videoElement.addEventListener('loadstart', function() {
+                    console.log("Safari: Video loadstart event fired");
+                });
+                
+                // 明确触发加载
+                setTimeout(() => {
+                    videoElement.load();
+                }, 100);
+            }
+        }
         
         // Setup seeking functionality
         let userSeeking = false;
@@ -1555,11 +1582,20 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
             }
         });
         
-        // Add error handling
+        // Add error handling with Safari-specific logging
         videoElement.addEventListener('error', function(e) {
-            console.error("Video loading error with Amazon S3:", e);
-            console.error("Error code:", videoElement.error ? videoElement.error.code : "unknown");
-            console.error("Error message:", videoElement.error ? videoElement.error.message : "unknown");
+            const errorCode = videoElement.error ? videoElement.error.code : "unknown";
+            const errorMessage = videoElement.error ? videoElement.error.message : "unknown";
+            
+            console.error(`Video loading error with Amazon S3 (${isSafari ? 'Safari' : 'Other browser'}):`);
+            console.error("Error code:", errorCode);
+            console.error("Error message:", errorMessage);
+            
+            // Enhanced Safari-specific error logging
+            if (isSafari) {
+                console.log("Safari error details - networkState:", videoElement.networkState);
+                console.log("Safari error details - readyState:", videoElement.readyState);
+            }
             
             // Hide loading overlay
             if (loadingOverlay) loadingOverlay.style.display = 'none';
@@ -1567,14 +1603,36 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
             // Add visible error message to page
             const errorMsg = document.createElement('div');
             errorMsg.className = "alert alert-danger mt-2";
-            errorMsg.innerHTML = `<strong>Error loading video from Amazon S3:</strong> ${videoElement.error ? videoElement.error.message : "Unknown error"}`;
+            errorMsg.innerHTML = `<strong>Error loading video from Amazon S3:</strong> ${errorMessage}`;
             videoWrapper.appendChild(errorMsg);
             
-            // Fall back to local video loading after a short delay
-            setTimeout(() => {
-                tryLoadFromLocalPaths(videoWrapper, videoWrapper, fileName);
-            }, 500);
+            // Safari-specific fallback - try direct video URL
+            if (isSafari && videoLoadAttempts[fileName] <= 2) {
+                console.log("Safari fallback: Attempting direct video load");
+                setTimeout(() => {
+                    // Try direct video loading without source element
+                    videoElement.innerHTML = '';
+                    videoElement.src = s3Url;
+                    videoElement.load();
+                }, 500);
+            } else {
+                // Fall back to local video loading after a short delay
+                setTimeout(() => {
+                    tryLoadFromLocalPaths(videoWrapper, videoWrapper, fileName);
+                }, 500);
+            }
         });
+        
+        // Add additional debug events for Safari
+        if (isSafari) {
+            videoElement.addEventListener('loadstart', () => console.log('Safari video event: loadstart'));
+            videoElement.addEventListener('durationchange', () => console.log('Safari video event: durationchange'));
+            videoElement.addEventListener('loadedmetadata', () => console.log('Safari video event: loadedmetadata'));
+            videoElement.addEventListener('loadeddata', () => console.log('Safari video event: loadeddata'));
+            videoElement.addEventListener('progress', () => console.log('Safari video event: progress'));
+            videoElement.addEventListener('waiting', () => console.log('Safari video event: waiting'));
+            videoElement.addEventListener('suspend', () => console.log('Safari video event: suspend'));
+        }
         
         // Add success handler
         videoElement.addEventListener('canplay', function() {
@@ -1587,8 +1645,15 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
             videoElement.style.display = "block";
         });
         
-        // Load video
-        videoElement.load();
+        // For Safari, use a slight delay before loading to avoid some timing issues
+        if (isSafari) {
+            setTimeout(() => {
+                videoElement.load();
+            }, 50);
+        } else {
+            // Load video immediately for other browsers
+            videoElement.load();
+        }
         return;
     } else {
         console.log(`No Amazon S3 URL found for ${baseFileName}, trying local paths`);
@@ -1604,78 +1669,7 @@ function tryLoadVideoWithRetries(videoPlayer, videoSource, fileName) {
     }
 }
 
-// Helper function to get URL from video_mapping.js
-function getVideoUrlFromMapping(fileName) {
-    // Check if video_mapping.js is loaded and accessible
-    if (typeof window.videoFileMapping === 'undefined') {
-        console.error("Video mapping is not available: window.videoFileMapping is undefined");
-        console.log("Available on window object:", Object.keys(window).filter(k => k.includes('video')));
-        return null;
-    }
-    
-    console.log(`Searching for video URL mapping for: ${fileName}`);
-    
-    // Check if the mapping has data
-    const mappingSize = Object.keys(window.videoFileMapping).length;
-    console.log(`Video mapping contains ${mappingSize} entries`);
-    
-    // Debug: Log the first few entries for inspection
-    if (mappingSize > 0) {
-        const sampleKeys = Object.keys(window.videoFileMapping).slice(0, 3);
-        console.log("Sample mapping entries:", sampleKeys);
-    }
-    
-    let foundUrl = null;
-    
-    // Try exact match first
-    if (window.videoFileMapping[fileName]) {
-        console.log(`Found exact match for ${fileName}`);
-        foundUrl = window.videoFileMapping[fileName];
-    }
-    
-    // Try without .mp4 extension if not found
-    if (!foundUrl) {
-        const baseNameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
-        const withExtension = baseNameWithoutExt + '.mp4';
-        
-        if (window.videoFileMapping[withExtension]) {
-            console.log(`Found match for ${fileName} using "${withExtension}"`);
-            foundUrl = window.videoFileMapping[withExtension];
-        }
-    }
-    
-    // Try with different versions of the filename
-    if (!foundUrl) {
-        const baseNameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
-        const variations = [
-            fileName,
-            baseNameWithoutExt,
-            baseNameWithoutExt + '.mp4',
-            fileName.toLowerCase(),
-            baseNameWithoutExt.toLowerCase(),
-            (baseNameWithoutExt + '.mp4').toLowerCase()
-        ];
-        
-        for (const variant of variations) {
-            if (window.videoFileMapping[variant]) {
-                console.log(`Found match for ${fileName} using variant "${variant}"`);
-                foundUrl = window.videoFileMapping[variant];
-                break;
-            }
-        }
-    }
-    
-    // If URL is found, use it directly (no optimization needed for Amazon S3)
-    if (foundUrl) {
-        return foundUrl;
-    }
-    
-    // No matching URL found
-    console.warn(`No Amazon S3 URL found for video ${fileName} after trying all variations`);
-    return null;
-}
-
-// Fall back to local path loading
+// 修改tryLoadFromLocalPaths函数以支持Safari
 function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
     // Try multiple possible local paths
     const questionId = fileName.replace('.mp4', '');
@@ -1700,9 +1694,13 @@ function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
         `additional_video_clips/${videoId.toLowerCase()}.mp4`
     ];
     
-    console.log(`Trying to load from local path: ${videoPaths[0]}`);
+    // 检测Safari浏览器
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    console.log(`Trying to load from local path: ${videoPaths[0]}, Safari: ${isSafari}`);
     
     // SIMPLIFIED CONTAINER STRUCTURE - create video directly in wrapper
+    // 为Safari添加特定的属性
     container.innerHTML = `
         <video
             id="video-player"
@@ -1712,8 +1710,10 @@ function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
             controlsList="nodownload"
             crossorigin="anonymous"
             playsinline
+            ${isSafari ? 'webkit-playsinline' : ''} 
+            ${isSafari ? 'preload="metadata"' : 'preload="auto"'}
             style="display: block; margin: 0 auto; border-radius: 4px; max-width: 100%;">
-            <source src="${videoPaths[0]}" type="video/mp4">
+            <source src="${videoPaths[0]}${isSafari ? '?nocache=' + Date.now() : ''}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     `;
@@ -1753,9 +1753,29 @@ function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
         }
     });
     
-    // Add error handling
+    // Add enhanced error handling for Safari
     videoElement.addEventListener('error', function(e) {
-        console.error("Local video loading error:", e);
+        const errorMsg = videoElement.error ? videoElement.error.message : "unknown error";
+        console.error(`Local video loading error (${isSafari ? 'Safari' : 'Other browser'}):`, errorMsg);
+        
+        // 针对Safari，尝试其他视频源
+        if (isSafari) {
+            console.log("Safari error - attempting alternative local paths");
+            
+            // 为Safari尝试其他本地路径
+            let altPathIndex = videoLoadAttempts[fileName] % videoPaths.length;
+            if (altPathIndex === 0) altPathIndex = 1; // 跳过第一个路径，因为已经尝试过了
+            
+            if (altPathIndex < videoPaths.length) {
+                const altPath = videoPaths[altPathIndex] + `?safari_retry=${Date.now()}`;
+                console.log(`Safari retry with path: ${altPath}`);
+                
+                videoElement.src = altPath;
+                videoElement.load();
+                videoLoadAttempts[fileName]++;
+                return;
+            }
+        }
         
         // If local loading fails, try Google Drive
         const fileId = getFileIdFromName(fileName);
@@ -1773,8 +1793,23 @@ function tryLoadFromLocalPaths(container, videoWrapper, fileName) {
         console.log(`Video ${fileName} successfully loaded from local source!`);
     });
     
-    // Load video
-    videoElement.load();
+    // Safari特定优化：添加更多调试事件
+    if (isSafari) {
+        videoElement.addEventListener('loadstart', () => console.log('Safari local video: loadstart'));
+        videoElement.addEventListener('durationchange', () => console.log('Safari local video: durationchange'));
+        videoElement.addEventListener('loadedmetadata', () => console.log('Safari local video: loadedmetadata'));
+        videoElement.addEventListener('loadeddata', () => console.log('Safari local video: loadeddata'));
+        videoElement.addEventListener('stalled', () => console.log('Safari local video: stalled'));
+    }
+    
+    // Load video - Safari延迟加载
+    if (isSafari) {
+        setTimeout(() => {
+            videoElement.load();
+        }, 50);
+    } else {
+        videoElement.load();
+    }
 }
 
 // Get file ID from filename using the video mapping
@@ -1922,4 +1957,98 @@ function getStandardizedFileName(questionId) {
         return `${questionId}.mp4`;
     }
     return `${questionId}.mp4`;
+}
+
+// Helper function to get URL from video_mapping.js
+function getVideoUrlFromMapping(fileName) {
+    // Check if video_mapping.js is loaded and accessible
+    if (typeof window.videoFileMapping === 'undefined') {
+        console.error("Video mapping is not available: window.videoFileMapping is undefined");
+        console.log("Available on window object:", Object.keys(window).filter(k => k.includes('video')));
+        return null;
+    }
+    
+    console.log(`Searching for video URL mapping for: ${fileName}`);
+    
+    // Check if the mapping has data
+    const mappingSize = Object.keys(window.videoFileMapping).length;
+    console.log(`Video mapping contains ${mappingSize} entries`);
+    
+    // Debug: Log the first few entries for inspection
+    if (mappingSize > 0) {
+        const sampleKeys = Object.keys(window.videoFileMapping).slice(0, 3);
+        console.log("Sample mapping entries:", sampleKeys);
+    }
+    
+    let foundUrl = null;
+    
+    // Try exact match first
+    if (window.videoFileMapping[fileName]) {
+        console.log(`Found exact match for ${fileName}`);
+        foundUrl = window.videoFileMapping[fileName];
+    }
+    
+    // Try without .mp4 extension if not found
+    if (!foundUrl) {
+        const baseNameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+        const withExtension = baseNameWithoutExt + '.mp4';
+        
+        if (window.videoFileMapping[withExtension]) {
+            console.log(`Found match for ${fileName} using "${withExtension}"`);
+            foundUrl = window.videoFileMapping[withExtension];
+        }
+    }
+    
+    // Try with different versions of the filename
+    if (!foundUrl) {
+        const baseNameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+        const variations = [
+            fileName,
+            baseNameWithoutExt,
+            baseNameWithoutExt + '.mp4',
+            fileName.toLowerCase(),
+            baseNameWithoutExt.toLowerCase(),
+            (baseNameWithoutExt + '.mp4').toLowerCase()
+        ];
+        
+        for (const variant of variations) {
+            if (window.videoFileMapping[variant]) {
+                console.log(`Found match for ${fileName} using variant "${variant}"`);
+                foundUrl = window.videoFileMapping[variant];
+                break;
+            }
+        }
+    }
+    
+    // If URL is found, use it directly
+    if (foundUrl) {
+        // 检测是否为Safari浏览器
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
+        // 对Safari进行特殊处理
+        if (isSafari) {
+            console.log("Safari browser detected, applying special URL handling");
+            
+            // 如果URL包含Amazon S3，确保使用HTTPS
+            if (foundUrl.includes('amazonaws.com') && !foundUrl.startsWith('https:')) {
+                foundUrl = foundUrl.replace(/^http:/, 'https:');
+                console.log("Converted URL to HTTPS for Safari compatibility");
+            }
+            
+            // 添加时间戳防止缓存问题
+            if (!foundUrl.includes('?')) {
+                foundUrl += `?safari=${Date.now()}`;
+            } else {
+                foundUrl += `&safari=${Date.now()}`;
+            }
+            
+            console.log("Safari-optimized URL:", foundUrl);
+        }
+        
+        return foundUrl;
+    }
+    
+    // No matching URL found
+    console.warn(`No Amazon S3 URL found for video ${fileName} after trying all variations`);
+    return null;
 }
